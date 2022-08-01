@@ -1,0 +1,10 @@
+Dollar = 15
+Leverage = 1
+TIME_PERIOD = "15m"
+LIMIT = "300"
+TIME_SLEEP = 2
+Dollars = Dollar * Leverage
+above_or_below_wick = 0.1
+trailing_order_check = 0.5
+trailing_order_increase = 0.3
+max_take_profit_limit = 20
