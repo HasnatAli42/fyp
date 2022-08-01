@@ -12,6 +12,15 @@ class Indicator:
         self.no_trend_zone_middle_line = 0
         self.long_signal_candle = False
         self.short_signal_candle = False
+        self.EMA_LOW_TIME_FRAME = 0
+        self.EMA_HIGH_TIME_FRAME = 0
+        self.isBullishTrend = False
+        self.isBearishTrend = False
+        self.X = 0
+        self.A = 0
+        self.B = 0
+        self.C = 0
+        self.D = 0
 #        self.no_trend_zone_upper_line = trade_bot_obj.upper_and_lower_trend_zone_line(high, low, close) + 2.6
 
     def trigger_candle_45_per(self, open, high, low, close, shadow_range):
@@ -40,6 +49,188 @@ class Indicator:
                                                                                       np.array(low)[-2],
                                                                                       np.array(close)[-2], 45)
 
+    def analyze_trend(self,close):
+        close = np.array(close)
+        self.EMA_LOW_TIME_FRAME = talib.EMA(close, 50)[-1]
+        self.EMA_HIGH_TIME_FRAME = talib.EMA(close, 100)[-1]
+        if self.EMA_LOW_TIME_FRAME >= self.EMA_HIGH_TIME_FRAME:
+            self.isBullishTrend = True
+            self.isBearishTrend = False
+        elif self.EMA_LOW_TIME_FRAME < self.EMA_HIGH_TIME_FRAME:
+            self.isBearishTrend = True
+            self.isBullishTrend = False
+
+
+    def find_x_a_b_c_d(self, open_price, high, low, close, find_range ):
+        global index, x,a,b,c,d
+        open_price = np.array(open_price)
+        high = np.array(high)
+        low = np.array(low)
+        close = np.array(close)
+        if self.isBullishTrend:
+            current_range = find_range
+            d = low[-1]
+            for current_index in range(len(low)-1,0,-1):
+                if low[current_index]< d:
+                    # print("D Swapped at index = ",current_index)
+                    d = low[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bullish D bottom current = ", d, "comparing with", low[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range -1
+                        self.D = d
+                        # print("Found D = ",self.D," at index =",index)
+                        break
+            current_range = find_range
+            c = high[index]
+            for current_index in range(index-1,0,-1):
+                if high[current_index] > c:
+                    # print("C Swapped at index = ",current_index)
+                    c = high[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bullish C top current = ", c, "comparing with", high[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.C = c
+                        # print("Found C = ", self.C, " at index =", index)
+                        break
+            current_range = find_range
+            b = low[index]
+            for current_index in range(index - 1, 0, -1):
+                if low[current_index] < b:
+                    # print("B Swapped at index = ",current_index)
+                    b = low[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bullish B bottom current = ", b, "comparing with", low[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.B = b
+                        # print("Found B = ", self.B, " at index =", index)
+                        break
+            current_range = find_range
+            a = high[index]
+            for current_index in range(index - 1, 0, -1):
+                if high[current_index] > a:
+                    # print("A Swapped at index = ",current_index)
+                    a = high[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bullish A top current = ", a, "comparing with", high[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.A = a
+                        # print("Found A = ", self.A, " at index =", index)
+                        break
+            current_range = find_range
+            x = low[index]
+            for current_index in range(index - 1, 0, -1):
+                if low[current_index] < x:
+                    # print("X Swapped at index = ",current_index)
+                    x = low[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bullish X bottom current = ", x, "comparing with", low[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.X = x
+                        # print("Found X = ", self.X, " at index =", index)
+                        break
+
+        elif self.isBearishTrend:
+            current_range = find_range
+            d = high[-1]
+            for current_index in range(len(high) - 1, 0, -1):
+                if high[current_index] > d:
+                    # print("D Swapped at index = ",current_index)
+                    d = high[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bearish D top current = ", d, "comparing with", high[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range-1
+                        self.D = d
+                        # print("Found D = ", self.D, " at index =", index)
+                        break
+            current_range = find_range
+            c = low[index]
+            for current_index in range(index - 1, 0, -1):
+                if low[current_index] < c:
+                    # print("C Swapped at index = ",current_index)
+                    c = low[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bearish C bottom current = ", c, "comparing with", low[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.C = c
+                        # print("Found C = ", self.C, " at index =", index)
+                        break
+            current_range = find_range
+            b = high[index]
+            for current_index in range(index - 1, 0, -1):
+                if high[current_index] > b:
+                    # print("B Swapped at index = ",current_index)
+                    b = high[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bearish B top current = ", b, "comparing with", high[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.B = b
+                        # print("Found B = ", self.B, " at index =", index)
+                        break
+            current_range = find_range
+            a = low[index]
+            for current_index in range(index - 1, 0, -1):
+                if low[current_index] < a:
+                    # print("A Swapped at index = ",current_index)
+                    a = low[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bearish A bottom current = ", a, "comparing with", low[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.A = a
+                        # print("Found A = ", self.A, " at index =", index)
+                        break
+            current_range = find_range
+            x = high[index]
+            for current_index in range(index - 1, 0, -1):
+                if high[current_index] > x:
+                    # print("X Swapped at index = ",current_index)
+                    x = high[current_index]
+                    current_range = find_range
+                else:
+                    # print("Finding Bearish X top current = ", x, "comparing with", high[current_index], "at index = ",
+                    #       current_index, "with range =", current_range)
+                    current_range += -1
+                    if current_range == 0:
+                        index = current_index + find_range
+                        self.X = x
+                        # print("Found X = ", self.X, " at index =", index)
+                        break
+
     def first_print(self, currency_price, SYMBOL):
         print("\n--------- Currency ---------")
         print(SYMBOL, ":", currency_price)
@@ -56,4 +247,11 @@ class Indicator:
         # print("Higher Order:", round(np.array(high)[-2]+(np.array(high)[-2] * above_or_below_wick/100),2))
         # print("Last Candle Low:", np.array(low)[-2])
         # print("Lower Order:", round(np.array(low)[-2]-(np.array(low)[-2] * above_or_below_wick/100),2))
+
+    def print_x_a_b_c_d(self):
+        print("X = ",self.X)
+        print("A = ", self.A)
+        print("B = ", self.B)
+        print("C = ", self.C)
+        print("D = ", self.D)
 

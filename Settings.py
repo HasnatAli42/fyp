@@ -1,7 +1,7 @@
 Dollar = 15
 Leverage = 1
-TIME_PERIOD = "15m"
-LIMIT = "300"
+TIME_PERIOD = "4h"
+LIMIT = "1500"
 TIME_SLEEP = 2
 Dollars = Dollar * Leverage
 above_or_below_wick = 0.1
