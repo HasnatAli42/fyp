@@ -27,6 +27,9 @@ class Symbols:
         self.api_key = "FBenBPte1P8oxxul5WmL5oxluUd3GGH83RnmGU1v40wxqw1dPh8qAREvKG7nWzad"
         self.secret_key = "M2xd43ai6fLTgwxmEtGT6PAmnMw6wcG61qq7ft1xLlCclvTafZHU63t1dePlvzIE"
         self.current_symbol_price = self.get_price()
+        self.timeframe = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1D"]
+        self.current_index_timeframe = 0
+        self.current_timeframe = self.timeframe[self.current_index_timeframe]
 
     def verify_data(self):
         if len(self.symbols) == len(self.symbols) == len(self.symbols):
@@ -35,7 +38,7 @@ class Symbols:
             print("UnVerified")
 
     def increment(self):
-        if self.current_index == len(self.symbols)-1:
+        if self.current_index == len(self.symbols) - 1:
             self.current_index = 3
         else:
             self.current_index += 1
@@ -44,9 +47,25 @@ class Symbols:
         self.current_decimal_point_price = self.decimal_point_price[self.current_index]
         self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
 
+    def increment_harmonics(self):
+        if self.current_index == len(self.symbols) - 1:
+            self.current_index = 0
+            if self.current_index_timeframe == len(self.timeframe) - 1:
+                self.current_index_timeframe = 0
+            else:
+                self.current_index_timeframe += 1
+        else:
+            self.current_index += 1
+        self.current_symbol = self.symbols[self.current_index]
+        self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
+        self.current_decimal_point_price = self.decimal_point_price[self.current_index]
+        self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
+        self.current_timeframe = self.timeframe[self.current_index_timeframe]
+
+
     def client(self):
         client = Client(api_key=self.api_key, sec_key=self.secret_key, testnet=False, symbol=self.current_symbol,
-                      recv_window=30000)
+                        recv_window=30000)
         client.change_leverage(Leverage)
         return client
 
@@ -68,8 +87,9 @@ class Symbols:
         res = requests.get(url)
         return round((quantity / float(res.json()['price'])), self.current_decimal_point_qty)
 
-    def get_data(self):
-        url = "https://fapi.binance.com/fapi/v1/klines?symbol={}&interval={}&limit={}".format(self.current_symbol, TIME_PERIOD,
+    def get_data(self, timeframe):
+        url = "https://fapi.binance.com/fapi/v1/klines?symbol={}&interval={}&limit={}".format(self.current_symbol,
+                                                                                              timeframe,
                                                                                               LIMIT)
         res = requests.get(url)
         closed_data = []
@@ -85,4 +105,3 @@ class Symbols:
 
     def print(self):
         print(self.current_index, ".", self.current_symbol, " : ", self.current_symbol_price)
-

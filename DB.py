@@ -1,4 +1,5 @@
 import sqlite3 as sl
+from datetime import datetime
 
 
 class DB:
@@ -64,3 +65,23 @@ class DB:
                             Time TEXT
                         );
                     """)
+
+        con = sl.connect('orders-executed.db')
+        with con:
+            con.execute(f"""
+                                CREATE TABLE IF NOT EXISTS HARMONIC_PATTERNS (
+                                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    Harmonic TEXT,
+                                    Time TEXT
+                                );
+                            """)
+
+    def insert_harmonic_pattern(self,String):
+        con = sl.connect('orders-executed.db')
+        sql = f'INSERT INTO HARMONIC_PATTERNS (Harmonic, Time) values(?,?) '
+        data = [
+            (str(String)),(str(datetime.now())),
+        ]
+        with con:
+            con.execute(sql, data)
+            con.commit()
