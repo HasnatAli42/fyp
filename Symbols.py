@@ -27,7 +27,8 @@ class Symbols:
         self.api_key = "FBenBPte1P8oxxul5WmL5oxluUd3GGH83RnmGU1v40wxqw1dPh8qAREvKG7nWzad"
         self.secret_key = "M2xd43ai6fLTgwxmEtGT6PAmnMw6wcG61qq7ft1xLlCclvTafZHU63t1dePlvzIE"
         self.current_symbol_price = self.get_price()
-        self.timeframe = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1D"]
+        self.timeframe = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h"]
+        # self.timeframe = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1D"]
         self.current_index_timeframe = 0
         self.current_timeframe = self.timeframe[self.current_index_timeframe]
 
@@ -75,6 +76,16 @@ class Symbols:
         except Exception as e:
             time.sleep(180)
             url = f"https://fapi.binance.com/fapi/v1/ticker/price?symbol={self.current_symbol}"
+        res = requests.get(url)
+        self.current_symbol_price = float(res.json()['price'])
+        return self.current_symbol_price
+
+    def get_price_spot(self, symbol):
+        try:
+            url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+        except Exception as e:
+            time.sleep(180)
+            url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
         res = requests.get(url)
         self.current_symbol_price = float(res.json()['price'])
         return self.current_symbol_price
