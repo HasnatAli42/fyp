@@ -10,6 +10,9 @@ Bottom = 0
 firstTarget = 0.272
 secondTarget = 0.618
 stopLoss = 1.13
+fib_level_1272 = 1.272
+fib_level_1414 = 1.414
+fib_level_1618 = 1.618
 
 
 class Fibonacci_Retracement:
@@ -32,6 +35,9 @@ class Fibonacci_Retracement:
         self.f_t_p_272 = 0
         self.s_t_p_618 = 0
         self.s_l_p_1_130 = 0
+        self.f_l_1_618 = 0
+        self.f_ext_l_1_272 = 0
+        self.f_ext_l_1_414 = 0
         self.calculate(start_price=start_price,end_price=end_price)
 
     def calculate(self, start_price, end_price):
@@ -56,6 +62,9 @@ class Fibonacci_Retracement:
             self.f_t_p_272 = self.end_price + (self.fib_price_range * firstTarget)
             self.s_t_p_618 = self.end_price + (self.fib_price_range * secondTarget)
             self.s_l_p_1_130 = self.end_price - (self.fib_price_range * stopLoss)
+            self.f_ext_l_1_272 = self.end_price - (self.fib_price_range * fib_level_1272)
+            self.f_ext_l_1_414 = self.end_price - (self.fib_price_range * fib_level_1414)
+            self.f_l_1_618 = self.end_price - (self.fib_price_range * fib_level_1618)
         elif self.isShort:
             self.f_r_p_236 = self.end_price + (self.fib_price_range * firstRetracement)
             self.s_r_p_382 = self.end_price + (self.fib_price_range * secondRetracement)
@@ -67,6 +76,9 @@ class Fibonacci_Retracement:
             self.f_t_p_272 = self.end_price - (self.fib_price_range * firstTarget)
             self.s_t_p_618 = self.end_price - (self.fib_price_range * secondTarget)
             self.s_l_p_1_130 = self.end_price + (self.fib_price_range * stopLoss)
+            self.f_ext_l_1_272 = self.end_price + (self.fib_price_range * fib_level_1272)
+            self.f_ext_l_1_414 = self.end_price + (self.fib_price_range * fib_level_1414)
+            self.f_l_1_618 = self.end_price + (self.fib_price_range * fib_level_1618)
         else:
             print("Error")
 
@@ -85,9 +97,11 @@ class Fibonacci_Retracement:
             print("Final Retracement Price    (", finalRetracement, ") = ", self.f_r_p_886)
             print("Start Price                ( 1.000 ) = ", self.start_price)
             print("Stop Loss Price            (", stopLoss, ") = ", self.s_l_p_1_130)
+            print("Fib Level 1.618            (", fib_level_1618, ") = ", self.f_l_1_618)
 
         elif self.isShort:
             print("*********************** Fib Retracement For S ", heading, " *********************")
+            print("Fib Level 1.618            (", fib_level_1618, ") = ", self.f_l_1_618)
             print("Stop Loss Price            (", stopLoss, ") = ", self.s_l_p_1_130)
             print("Start Price                ( 1.000 ) = ", self.start_price)
             print("Final Retracement Price    (", finalRetracement, ") = ", self.f_r_p_886)

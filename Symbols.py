@@ -27,7 +27,7 @@ class Symbols:
         self.api_key = "FBenBPte1P8oxxul5WmL5oxluUd3GGH83RnmGU1v40wxqw1dPh8qAREvKG7nWzad"
         self.secret_key = "M2xd43ai6fLTgwxmEtGT6PAmnMw6wcG61qq7ft1xLlCclvTafZHU63t1dePlvzIE"
         self.current_symbol_price = self.get_price()
-        self.timeframe = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h"]
+        self.timeframe = ["15m", "30m", "1h", "2h", "4h"]
         # self.timeframe = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1D"]
         self.current_index_timeframe = 0
         self.current_timeframe = self.timeframe[self.current_index_timeframe]
