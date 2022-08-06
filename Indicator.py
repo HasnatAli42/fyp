@@ -16,6 +16,7 @@ class Indicator:
         self.EMA_HIGH_TIME_FRAME = 0
         self.isBullishTrend = False
         self.isBearishTrend = False
+        self.isDinRange = False
         self.X = 0
         self.A = 0
         self.B = 0
@@ -60,6 +61,18 @@ class Indicator:
             self.isBearishTrend = True
             self.isBullishTrend = False
 
+    def calculate_range(self, provided_array_higher,provided_array_lower, check_nearest):
+        global provided_array
+        if self.isBullishTrend:
+            provided_array = np.array(provided_array_lower)
+        elif self.isBearishTrend:
+            provided_array = np.array(provided_array_higher)
+        for x in range(-check_nearest, 0, 1):
+            if provided_array[x] == self.D:
+                self.isDinRange = True
+                break
+            else:
+                self.isDinRange = False
 
     def find_x_a_b_c_d(self, open_price, high, low, close, find_range ):
         global index, x,a,b,c,d
@@ -249,7 +262,7 @@ class Indicator:
         # print("Lower Order:", round(np.array(low)[-2]-(np.array(low)[-2] * above_or_below_wick/100),2))
 
     def print_x_a_b_c_d(self):
-        print("X = ",self.X)
+        print("X = ", self.X)
         print("A = ", self.A)
         print("B = ", self.B)
         print("C = ", self.C)

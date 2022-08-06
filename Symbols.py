@@ -116,3 +116,6 @@ class Symbols:
 
     def print(self):
         print(self.current_index, ".", self.current_symbol, " : ", self.current_symbol_price)
+
+    def print_current_status(self):
+        print("********************* Finding Harmonics For "+self.current_symbol+" at TimeFrame = "+ self.current_timeframe+ " ******************************")

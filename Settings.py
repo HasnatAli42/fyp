@@ -1,6 +1,6 @@
 Dollar = 15
 Leverage = 1
-TIME_PERIOD = "4h"
+TIME_PERIOD = "15min"
 LIMIT = "1500"
 TIME_SLEEP = 2
 Dollars = Dollar * Leverage

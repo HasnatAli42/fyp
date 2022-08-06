@@ -69,16 +69,36 @@ class DB:
         con = sl.connect('orders-executed.db')
         with con:
             con.execute(f"""
-                                CREATE TABLE IF NOT EXISTS HARMONIC_PATTERNS (
+                                CREATE TABLE IF NOT EXISTS HARMONIC_PARTIAL_PATTERNS (
                                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                                     Harmonic TEXT,
                                     Time TEXT
                                 );
                             """)
 
-    def insert_harmonic_pattern(self,String):
         con = sl.connect('orders-executed.db')
-        sql = f'INSERT INTO HARMONIC_PATTERNS (Harmonic, Time) values(?,?) '
+        with con:
+            con.execute(f"""
+                                CREATE TABLE IF NOT EXISTS HARMONIC_COMPLETE_PATTERNS (
+                                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    Harmonic TEXT,
+                                    Time TEXT
+                                );
+                            """)
+
+    def insert_harmonic_partial_pattern(self,String):
+        con = sl.connect('orders-executed.db')
+        sql = f'INSERT INTO HARMONIC_PARTIAL_PATTERNS (Harmonic, Time) values(?,?) '
+        data = [
+            (str(String)),(str(datetime.now())),
+        ]
+        with con:
+            con.execute(sql, data)
+            con.commit()
+
+    def insert_harmonic_complete_pattern(self,String):
+        con = sl.connect('orders-executed.db')
+        sql = f'INSERT INTO HARMONIC_COMPLETE_PATTERNS (Harmonic, Time) values(?,?) '
         data = [
             (str(String)),(str(datetime.now())),
         ]

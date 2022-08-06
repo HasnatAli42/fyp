@@ -15,7 +15,7 @@ from Settings import above_or_below_wick, TIME_PERIOD, TIME_SLEEP, max_take_prof
 def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indicator, symb_obj: Symbols, db_obj: DB):
     while True:
         db_obj.initialize_db(symb_obj.current_symbol)
-        open_price, high, low, close = symb_obj.get_data()
+        open_price, high, low, close = symb_obj.get_data(timeframe=TIME_PERIOD)
         indicator_obj.calculate(open_price=open_price, high=high, low=low, close=close)
         trade_bot_obj.currency_price = symb_obj.get_price()
 
