@@ -13,22 +13,17 @@ from string_dictionary import bullish_bat, bearish_bat, alt_bull_bat, alt_bear_b
     bullish_cypher, bullish_shark, bearish_shark, bearish_cypher, bullish_butterfly, bullish_crab, bearish_crab, \
     bullish_deep, bearish_deep, bearish_butterfly
 
-upper_Sharpness = 1.003
-lower_sharpness = 0.997
-
 
 def bullish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement, fib_A_to_B: Fibonacci_Retracement,
-                              fib_A_to_D: Fibonacci_Retracement, symbol):
-    print(
-        "***************************Searching for " + bullish_bat + " For " + symbol + " *************************** " + str(
-            datetime.now()))
+                              fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_bat, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 > xabcd.B > fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 < xabcd.C < fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.f_r_p_886 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_r_p_886 * upper_Sharpness):
-                print_sharpness(upper=fib_X_to_A.f_r_p_886 * upper_Sharpness, middle=xabcd.D,
-                                lower=fib_X_to_A.f_r_p_886 * lower_sharpness)
+            if (fib_X_to_A.f_r_p_886 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_r_p_886 * symbol.current_upper_sharpness):
+                print_sharpness(upper=fib_X_to_A.f_r_p_886 * symbol.current_upper_sharpness, middle=xabcd.D,
+                                lower=fib_X_to_A.f_r_p_886 * symbol.current_lower_sharpness)
                 print("D is Valid")
                 print(bullish_bat + " Verified")
                 return "D"
@@ -39,17 +34,15 @@ def bullish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracemen
 
 
 def bearish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement, fib_A_to_B: Fibonacci_Retracement,
-                              fib_A_to_D: Fibonacci_Retracement, symbol):
-    print(
-        "***************************Searching for " + bearish_bat + " For " + symbol + " *************************** " + str(
-            datetime.now()))
+                              fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_bat, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 < xabcd.B < fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 > xabcd.C > fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.f_r_p_886 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_r_p_886 * upper_Sharpness):
-                print_sharpness(upper=fib_X_to_A.f_r_p_886 * upper_Sharpness, middle=xabcd.D,
-                                lower=fib_X_to_A.f_r_p_886 * lower_sharpness)
+            if (fib_X_to_A.f_r_p_886 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_r_p_886 * symbol.current_upper_sharpness):
+                print_sharpness(upper=fib_X_to_A.f_r_p_886 * symbol.current_upper_sharpness, middle=xabcd.D,
+                                lower=fib_X_to_A.f_r_p_886 * symbol.current_lower_sharpness)
                 print("D is Valid")
                 print(bearish_bat + " Verified")
                 return "D"
@@ -61,17 +54,15 @@ def bearish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracemen
 
 def alternate_bullish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                         fib_A_to_B: Fibonacci_Retracement,
-                                        fib_A_to_D: Fibonacci_Retracement, symbol):
-    print(
-        "***************************Searching for " + alt_bull_bat + " For " + symbol + " *************************** " + str(
-            datetime.now()))
-    if (fib_X_to_A.s_r_p_382 * lower_sharpness) <= xabcd.B <= (fib_X_to_A.s_r_p_382 * upper_Sharpness):
+                                        fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=alt_bull_bat, sym=symbol.current_symbol)
+    if (fib_X_to_A.s_r_p_382 * symbol.current_lower_sharpness) <= xabcd.B <= (fib_X_to_A.s_r_p_382 * symbol.current_upper_sharpness):
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 < xabcd.C < fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.s_l_p_1_130 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.s_l_p_1_130 * upper_Sharpness):
-                print_sharpness(upper=fib_X_to_A.s_l_p_1_130 * upper_Sharpness, middle=xabcd.D,
-                                lower=fib_X_to_A.s_l_p_1_130 * lower_sharpness)
+            if (fib_X_to_A.s_l_p_1_130 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.s_l_p_1_130 * symbol.current_upper_sharpness):
+                print_sharpness(upper=fib_X_to_A.s_l_p_1_130 * symbol.current_upper_sharpness, middle=xabcd.D,
+                                lower=fib_X_to_A.s_l_p_1_130 * symbol.current_lower_sharpness)
                 print("D is Valid")
                 print(alt_bull_bat + " Verified")
                 return "D"
@@ -83,17 +74,15 @@ def alternate_bullish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_
 
 def alternate_bearish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                         fib_A_to_B: Fibonacci_Retracement,
-                                        fib_A_to_D: Fibonacci_Retracement, symbol):
-    print(
-        "***************************Searching for " + alt_bear_bat + " For " + symbol + " *************************** " + str(
-            datetime.now()))
-    if (fib_X_to_A.s_r_p_382 * lower_sharpness) <= xabcd.B <= (fib_X_to_A.s_r_p_382 * upper_Sharpness):
+                                        fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=alt_bear_bat, sym=symbol.current_symbol)
+    if (fib_X_to_A.s_r_p_382 * symbol.current_lower_sharpness) <= xabcd.B <= (fib_X_to_A.s_r_p_382 * symbol.current_upper_sharpness):
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 > xabcd.C > fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.s_l_p_1_130 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.s_l_p_1_130 * upper_Sharpness):
-                print_sharpness(upper=fib_X_to_A.s_l_p_1_130 * upper_Sharpness, middle=xabcd.D,
-                                lower=fib_X_to_A.s_l_p_1_130 * lower_sharpness)
+            if (fib_X_to_A.s_l_p_1_130 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.s_l_p_1_130 * symbol.current_upper_sharpness):
+                print_sharpness(upper=fib_X_to_A.s_l_p_1_130 * symbol.current_upper_sharpness, middle=xabcd.D,
+                                lower=fib_X_to_A.s_l_p_1_130 * symbol.current_lower_sharpness)
                 print("D is Valid")
                 print(alt_bear_bat + " Verified")
                 return "D"
@@ -105,15 +94,15 @@ def alternate_bearish_bat_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_
 
 def bullish_gartley_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                   fib_A_to_B: Fibonacci_Retracement,
-                                  fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bullish_gartley, sym=symbol)
+                                  fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_gartley, sym=symbol.current_symbol)
     if fib_X_to_A.g_p_e_618 > xabcd.B > fib_X_to_A.l_r_p_786:
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 < xabcd.C < fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.l_r_p_786 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.l_r_p_786 * upper_Sharpness):
-                print_sharpness(upper=fib_X_to_A.l_r_p_786 * upper_Sharpness, middle=xabcd.D,
-                                lower=fib_X_to_A.l_r_p_786 * lower_sharpness)
+            if (fib_X_to_A.l_r_p_786 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.l_r_p_786 * symbol.current_upper_sharpness):
+                print_sharpness(upper=fib_X_to_A.l_r_p_786 * symbol.current_upper_sharpness, middle=xabcd.D,
+                                lower=fib_X_to_A.l_r_p_786 * symbol.current_lower_sharpness)
                 print("D is Valid")
                 print(bullish_gartley + " Verified")
                 return "D"
@@ -125,15 +114,15 @@ def bullish_gartley_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retrac
 
 def bearish_gartley_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                   fib_A_to_B: Fibonacci_Retracement,
-                                  fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bearish_gartley, sym=symbol)
+                                  fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_gartley, sym=symbol.current_symbol)
     if fib_X_to_A.g_p_e_618 < xabcd.B < fib_X_to_A.l_r_p_786:
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 > xabcd.C > fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.l_r_p_786 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.l_r_p_786 * upper_Sharpness):
-                print_sharpness(upper=fib_X_to_A.l_r_p_786 * upper_Sharpness, middle=xabcd.D,
-                                lower=fib_X_to_A.l_r_p_786 * lower_sharpness)
+            if (fib_X_to_A.l_r_p_786 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.l_r_p_786 * symbol.current_upper_sharpness):
+                print_sharpness(upper=fib_X_to_A.l_r_p_786 * symbol.current_upper_sharpness, middle=xabcd.D,
+                                lower=fib_X_to_A.l_r_p_786 * symbol.current_lower_sharpness)
                 print("D is Valid")
                 print(bullish_gartley + " Verified")
                 return "D"
@@ -145,13 +134,13 @@ def bearish_gartley_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retrac
 
 def bullish_cypher_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                  fib_ext_X_to_A_back_to_X: Fibonacci_Retracement, fib_X_to_C: Fibonacci_Retracement,
-                                 fib_C_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bullish_cypher, sym=symbol)
+                                 fib_C_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_cypher, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 > xabcd.B > fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_ext_X_to_A_back_to_X.f_ext_l_1_272 < xabcd.C < fib_ext_X_to_A_back_to_X.f_ext_l_1_414:
             print("C is Valid")
-            if (fib_X_to_C.l_r_p_786 * lower_sharpness) <= xabcd.D <= (fib_X_to_C.l_r_p_786 * upper_Sharpness):
+            if (fib_X_to_C.l_r_p_786 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_C.l_r_p_786 * symbol.current_upper_sharpness):
                 print("D is Valid")
                 print(bullish_cypher + " Verified")
                 return "D"
@@ -163,13 +152,13 @@ def bullish_cypher_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retrace
 
 def bearish_cypher_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                  fib_ext_X_to_A_back_to_X: Fibonacci_Retracement, fib_X_to_C: Fibonacci_Retracement,
-                                 fib_C_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bearish_cypher, sym=symbol)
+                                 fib_C_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_cypher, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 < xabcd.B < fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_ext_X_to_A_back_to_X.f_ext_l_1_272 > xabcd.C > fib_ext_X_to_A_back_to_X.f_ext_l_1_414:
             print("C is Valid")
-            if (fib_X_to_C.l_r_p_786 * lower_sharpness) <= xabcd.D <= (fib_X_to_C.l_r_p_786 * upper_Sharpness):
+            if (fib_X_to_C.l_r_p_786 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_C.l_r_p_786 * symbol.current_upper_sharpness):
                 print("D is Valid")
                 print(bearish_cypher + " Verified")
                 return "D"
@@ -181,8 +170,8 @@ def bearish_cypher_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retrace
 
 def bullish_shark_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                 fib_A_to_B: Fibonacci_Retracement, fib_X_to_C: Fibonacci_Retracement,
-                                fib_C_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bullish_shark, sym=symbol)
+                                fib_C_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_shark, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 > xabcd.B > fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_A_to_B.s_l_p_1_130 < xabcd.C < fib_A_to_B.f_l_1_618:
@@ -199,8 +188,8 @@ def bullish_shark_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracem
 
 def bearish_shark_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                 fib_A_to_B: Fibonacci_Retracement, fib_X_to_C: Fibonacci_Retracement,
-                                fib_C_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bearish_shark, sym=symbol)
+                                fib_C_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_shark, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 < xabcd.B < fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_A_to_B.s_l_p_1_130 > xabcd.C > fib_A_to_B.f_l_1_618:
@@ -217,9 +206,9 @@ def bearish_shark_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracem
 
 def bullish_butterfly_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                     fib_A_to_B: Fibonacci_Retracement, fib_ext_A_to_X_back_to_A: Fibonacci_Retracement,
-                                    fib_ext_A_to_B_back_to_A_place_A_at_C: Fibonacci_Retracement,fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bullish_butterfly, sym=symbol)
-    if (fib_X_to_A.l_r_p_786 * lower_sharpness) <= xabcd.B <= (fib_X_to_A.l_r_p_786 * upper_Sharpness):
+                                    fib_ext_A_to_B_back_to_A_place_A_at_C: Fibonacci_Retracement,fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_butterfly, sym=symbol.current_symbol)
+    if (fib_X_to_A.l_r_p_786 * symbol.current_lower_sharpness) <= xabcd.B <= (fib_X_to_A.l_r_p_786 * symbol.current_upper_sharpness):
         print("B is Valid")
         if fib_A_to_B.f_r_p_886 > xabcd.C > fib_A_to_B.s_r_p_382:
             print("C is Valid")
@@ -244,9 +233,9 @@ def bullish_butterfly_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retr
 
 def bearish_butterfly_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
                                     fib_A_to_B: Fibonacci_Retracement, fib_ext_A_to_X_back_to_A: Fibonacci_Retracement,
-                                    fib_ext_A_to_B_back_to_A_place_A_at_C: Fibonacci_Retracement,fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bearish_butterfly, sym=symbol)
-    if (fib_X_to_A.l_r_p_786 * lower_sharpness) <= xabcd.B <= (fib_X_to_A.l_r_p_786 * upper_Sharpness):
+                                    fib_ext_A_to_B_back_to_A_place_A_at_C: Fibonacci_Retracement,fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_butterfly, sym=symbol.current_symbol)
+    if (fib_X_to_A.l_r_p_786 * symbol.current_lower_sharpness) <= xabcd.B <= (fib_X_to_A.l_r_p_786 * symbol.current_upper_sharpness):
         print("B is Valid")
         if fib_A_to_B.f_r_p_886 < xabcd.C < fib_A_to_B.s_r_p_382:
             print("C is Valid")
@@ -270,13 +259,13 @@ def bearish_butterfly_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retr
 
 
 def bullish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
-                               fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bullish_crab, sym=symbol)
+                               fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_crab, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 > xabcd.B > fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 < xabcd.C < fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.f_l_1_618 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * upper_Sharpness):
+            if (fib_X_to_A.f_l_1_618 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * symbol.current_upper_sharpness):
                 print("D is Valid")
                 print(bullish_crab + " Verified")
                 return "D"
@@ -287,13 +276,13 @@ def bullish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retraceme
 
 
 def bearish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
-                               fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bearish_crab, sym=symbol)
+                               fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_crab, sym=symbol.current_symbol)
     if fib_X_to_A.s_r_p_382 < xabcd.B < fib_X_to_A.g_p_e_618:
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 > xabcd.C > fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.f_l_1_618 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * upper_Sharpness):
+            if (fib_X_to_A.f_l_1_618 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * symbol.current_upper_sharpness):
                 print("D is Valid")
                 print(bearish_crab + " Verified")
                 return "D"
@@ -304,13 +293,13 @@ def bearish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retraceme
 
 
 def deep_bullish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
-                                    fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bullish_deep, sym=symbol)
-    if (fib_X_to_A.f_r_p_886 * lower_sharpness) <= xabcd.B <= (fib_X_to_A.f_r_p_886 * upper_Sharpness):
+                                    fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bullish_deep, sym=symbol.current_symbol)
+    if (fib_X_to_A.f_r_p_886 * symbol.current_lower_sharpness) <= xabcd.B <= (fib_X_to_A.f_r_p_886 * symbol.current_upper_sharpness):
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 < xabcd.C < fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.f_l_1_618 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * upper_Sharpness):
+            if (fib_X_to_A.f_l_1_618 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * symbol.current_upper_sharpness):
                 print("D is Valid")
                 print(bullish_deep + " Verified")
                 return "D"
@@ -321,13 +310,13 @@ def deep_bullish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retr
 
 
 def deep_bearish_crab_chart_pattern(xabcd: Indicator, fib_X_to_A: Fibonacci_Retracement,
-                                    fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol):
-    print_search(string=bearish_deep, sym=symbol)
-    if (fib_X_to_A.f_r_p_886 * lower_sharpness) <= xabcd.B <= (fib_X_to_A.f_r_p_886 * upper_Sharpness):
+                                    fib_A_to_B: Fibonacci_Retracement, fib_A_to_D: Fibonacci_Retracement, symbol: Symbols):
+    print_search(string=bearish_deep, sym=symbol.current_symbol)
+    if (fib_X_to_A.f_r_p_886 * symbol.current_lower_sharpness) <= xabcd.B <= (fib_X_to_A.f_r_p_886 * symbol.current_upper_sharpness):
         print("B is Valid")
         if fib_A_to_B.s_r_p_382 > xabcd.C > fib_A_to_B.f_r_p_886:
             print("C is Valid")
-            if (fib_X_to_A.f_l_1_618 * lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * upper_Sharpness):
+            if (fib_X_to_A.f_l_1_618 * symbol.current_lower_sharpness) <= xabcd.D <= (fib_X_to_A.f_l_1_618 * symbol.current_upper_sharpness):
                 print("D is Valid")
                 print(bearish_deep + " Verified")
                 return "D"
@@ -367,6 +356,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
         indicator_obj.find_x_a_b_c_d(open_price=open_price, high=high, low=low, close=close, find_range=15)
         indicator_obj.calculate_range(provided_array_higher=high, provided_array_lower=low, check_nearest=5)
         symb_obj.print_current_status()
+
         if indicator_obj.isBullishTrend and indicator_obj.isDinRange:
 
             # Bullish Bat Chart Pattern
@@ -374,7 +364,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                 fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                 fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                 fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                symbol=symb_obj.current_symbol)
+                                                symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_bat, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -384,7 +374,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                           fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                           fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                           fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                          symbol=symb_obj.current_symbol)
+                                                          symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=alt_bull_bat, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -394,7 +384,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                     fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                     fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                     fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                    symbol=symb_obj.current_symbol)
+                                                    symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_gartley, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -405,7 +395,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                    fib_ext_X_to_A_back_to_X=Fibonacci_Retracement(indicator_obj.A, indicator_obj.X),
                                                    fib_X_to_C=Fibonacci_Retracement(indicator_obj.X, indicator_obj.C),
                                                    fib_C_to_D=Fibonacci_Retracement(indicator_obj.C, indicator_obj.D),
-                                                   symbol=symb_obj.current_symbol)
+                                                   symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_cypher, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -416,7 +406,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                   fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                   fib_X_to_C=Fibonacci_Retracement(indicator_obj.X, indicator_obj.C),
                                                   fib_C_to_D=Fibonacci_Retracement(indicator_obj.C, indicator_obj.D),
-                                                  symbol=symb_obj.current_symbol)
+                                                  symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_shark, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -428,7 +418,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                       fib_ext_A_to_X_back_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                       fib_ext_A_to_B_back_to_A_place_A_at_C=Fibonacci_Retracement((indicator_obj.B - (indicator_obj.A - indicator_obj.C)), indicator_obj.C),
                                                       fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                      symbol=symb_obj.current_symbol)
+                                                      symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_butterfly, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -438,7 +428,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                  fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                  fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                  fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                 symbol=symb_obj.current_symbol)
+                                                 symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_crab, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -448,7 +438,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                       fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                       fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                       fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                      symbol=symb_obj.current_symbol)
+                                                      symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bullish_deep, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -460,7 +450,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                 fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                 fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                 fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                symbol=symb_obj.current_symbol)
+                                                symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_bat, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -470,7 +460,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                           fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                           fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                           fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                          symbol=symb_obj.current_symbol)
+                                                          symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=alt_bear_bat, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -480,7 +470,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                     fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                     fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                     fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                    symbol=symb_obj.current_symbol)
+                                                    symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_gartley, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -491,7 +481,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                    fib_ext_X_to_A_back_to_X=Fibonacci_Retracement(indicator_obj.A, indicator_obj.X),
                                                    fib_X_to_C=Fibonacci_Retracement(indicator_obj.X, indicator_obj.C),
                                                    fib_C_to_D=Fibonacci_Retracement(indicator_obj.C, indicator_obj.D),
-                                                   symbol=symb_obj.current_symbol)
+                                                   symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_cypher, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -502,7 +492,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                   fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                   fib_X_to_C=Fibonacci_Retracement(indicator_obj.X, indicator_obj.C),
                                                   fib_C_to_D=Fibonacci_Retracement(indicator_obj.C, indicator_obj.D),
-                                                  symbol=symb_obj.current_symbol)
+                                                  symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_shark, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -514,7 +504,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                       fib_ext_A_to_X_back_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                       fib_ext_A_to_B_back_to_A_place_A_at_C=Fibonacci_Retracement((indicator_obj.B + (indicator_obj.C - indicator_obj.A)), indicator_obj.C),
                                                       fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                      symbol=symb_obj.current_symbol)
+                                                      symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_butterfly, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -524,7 +514,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                  fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                  fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                  fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                 symbol=symb_obj.current_symbol)
+                                                 symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_crab, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
@@ -534,7 +524,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                       fib_X_to_A=Fibonacci_Retracement(indicator_obj.X, indicator_obj.A),
                                                       fib_A_to_B=Fibonacci_Retracement(indicator_obj.A, indicator_obj.B),
                                                       fib_A_to_D=Fibonacci_Retracement(indicator_obj.A, indicator_obj.D),
-                                                      symbol=symb_obj.current_symbol)
+                                                      symbol=symb_obj)
             print(trigger)
             print_harmonic_result(trigger=trigger, pattern=bearish_deep, timeframe=symb_obj.current_timeframe,
                                   Symbol=symb_obj.current_symbol, db=db_obj, indicate=indicator_obj)
