@@ -7,5 +7,5 @@
 #     print(False)
 
 liat = ["1" ,2 ,3 ,4 ,5 ,6 ,7 ,8 ,9 ,10]
-pop_symbol = liat.remove("1")
-print(liat)
+pop_symbol = liat.index(6)
+print(pop_symbol)

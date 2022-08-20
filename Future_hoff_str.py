@@ -49,6 +49,11 @@ def assign_indicate_obj(to_be_assigned_ind_obj: Indicator, assigned_from_ind_obj
     to_be_assigned_ind_obj.fast_primary_trend_line = assigned_from_ind_obj.fast_primary_trend_line
 
 
+def allow_thread(t_obj: TradingBot):
+    time.sleep(TIME_SLEEP*6)
+    t_obj.isThreadAllowed = True
+
+
 def long_order_placed(
         t_obj: TradingBot,
         i_obj: Indicator,
@@ -198,7 +203,7 @@ def short_order_placed(
                                                             Decimal_point_price=current_decimal_point_price,
                                                             QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
-            executed_order_on_wick_check = threading.Thread(target=thread_trade_obj.executed_order_on_wick_check,args=(current_symbol, client, current_QNTY))
+            executed_order_on_wick_check = threading.Thread(target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
             executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadShort = True
@@ -239,7 +244,8 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
         print("Symbols List Length         = ", len(symb_obj.symbols))
 
         if not trade_bot_obj.isThreadAllowed:
-            trade_bot_obj.isThreadAllowed = True
+            allow_threads_after_sometime = threading.Thread(target=allow_thread, args=(trade_bot_obj,))
+            allow_threads_after_sometime.start()
             assign_trade_bot_main_open(to_be_assigned=trade_bot_obj)
             symb_obj.reset_symbol()
             symb_obj.increment_to_specific_symbol(symbol=trade_bot_obj.order_executed_for_symbol)
@@ -268,6 +274,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
 
         else:
             if trade_bot_obj.isOrderPlaced and trade_bot_obj.isLongOrderPlaced:
+
                 placed_order_execution_check = threading.Thread(
                     target=long_order_placed, args=(
                         trade_bot_obj, indicator_obj, symb_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
@@ -278,7 +285,9 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                 trade_bot_obj.isOrderPlaced = False
                 trade_bot_obj.isLongOrderPlaced = False
                 symb_obj.move_symbols()
-            elif trade_bot_obj.isOrderPlaced and trade_bot_obj.isShortOrderPlaced:
+
+            elif trade_bot_obj.isOrderPlaced and trade_bot_obj.isShortOrderPlaced:\
+
                 placed_order_execution_check = threading.Thread(
                     target=short_order_placed, args=(
                         trade_bot_obj, indicator_obj, symb_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
@@ -289,6 +298,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                 trade_bot_obj.isOrderPlaced = False
                 trade_bot_obj.isShortOrderPlaced = False
                 symb_obj.move_symbols()
+
             elif trade_bot_obj.isOrderInProgress and trade_bot_obj.isLongOrderInProgress:
                 if trade_bot_obj.currency_price < trade_bot_obj.place_order_price:
                     if counter_obj.isInProfit:

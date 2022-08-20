@@ -83,7 +83,7 @@ class Symbols:
         self.decimal_point_price = decimal_point_price
         self.decimal_point_qty = decimal_point_qty
 
-    def increment_to_specific_symbol(self, symbol: str):
+    def increment_to_specific_symbol(self, symbol):
         self.current_index = self.symbols.index(symbol)
         self.current_symbol = self.symbols[self.current_index]
         self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
