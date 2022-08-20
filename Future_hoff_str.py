@@ -99,7 +99,7 @@ def long_order_placed(
                 thread_trade_obj.write_to_file(currentIndex=current_index)
 
         if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
-            print("Order Executed Successfully for",current_symbol)
+            # print("Order Executed Successfully for", current_symbol)
             thread_trade_obj.update_data_set(side="LongExecuted", SYMBOL=current_symbol,
                                              client=client,
                                              QNTY=current_QNTY)
@@ -114,7 +114,7 @@ def long_order_placed(
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
             t_obj.order_executed_for_symbol = current_symbol
         if thread_indicate_obj.slow_speed_line < thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
-            print("Order Cancelled Successfully for",current_symbol)
+            # print("Order Cancelled Successfully for", current_symbol)
             client.cancel_all_open_orders(current_symbol)
             thread_trade_obj.newHoffmanSignalCheck = False
             if thread_trade_obj.take_profit > max_take_profit_limit:
@@ -174,7 +174,7 @@ def short_order_placed(
                                                  client=client, QNTY=current_QNTY)
                 thread_trade_obj.write_to_file(currentIndex=current_index)
         if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
-            print("Order Executed Successfully for",current_symbol)
+            # print("Order Executed Successfully for",current_symbol)
             thread_trade_obj.update_data_set(side="ShortExecuted", SYMBOL=current_symbol,
                                              client=client, QNTY=current_QNTY)
             thread_trade_obj.place_in_progress_order_limits(SYMBOL=current_symbol,
@@ -189,7 +189,7 @@ def short_order_placed(
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
             t_obj.order_executed_for_symbol = current_symbol
         if thread_indicate_obj.slow_speed_line > thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
-            print("Order Cancelled Successfully for",current_symbol)
+            # print("Order Cancelled Successfully for", current_symbol)
             client.cancel_all_open_orders(current_symbol)
             thread_trade_obj.newHoffmanSignalCheck = False
             if thread_trade_obj.take_profit > max_take_profit_limit:
@@ -536,7 +536,7 @@ if __name__ == "__main__":
     counters_obj = Counters()
     indicators_obj = Indicator()
     trading_bot_obj = TradingBot()
-    symbol_obj = Symbols(3, 0)
+    symbol_obj = Symbols(current_index_symbol=0, current_index_time_frame=0)
     db = DB()
     while True:
         try:
