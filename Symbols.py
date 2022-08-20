@@ -58,7 +58,7 @@ class Symbols:
 
     def increment(self):
         if self.current_index == len(self.symbols) - 1:
-            self.current_index = 3
+            self.current_index = 0
         else:
             self.current_index += 1
         self.current_symbol = self.symbols[self.current_index]
@@ -70,7 +70,13 @@ class Symbols:
         pop_symbol = self.symbols.pop(self.current_index)
         pop_point_qty = self.decimal_point_qty.pop(self.current_index)
         pop_point_price = self.decimal_point_price.pop(self.current_index)
-        self.moved_symbols_list.append((pop_symbol, pop_point_price, pop_point_qty))
+        self.moved_symbols_list.append(pop_symbol)
+        self.current_symbol = self.symbols[self.current_index]
+        self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
+        self.current_decimal_point_price = self.decimal_point_price[self.current_index]
+        self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
+        if self.current_index == len(self.symbols):
+            self.current_index = 0
 
     def reset_symbol(self):
         self.symbols = symbols

@@ -52,12 +52,16 @@ def assign_indicate_obj(to_be_assigned_ind_obj: Indicator, assigned_from_ind_obj
 def long_order_placed(
         t_obj: TradingBot,
         i_obj: Indicator,
+        s_obj: Symbols,
         current_symbol,
         current_decimal_point_price,
         current_QNTY,
         current_index,
         client: Client
 ):
+    global isThisExecutedThread, isThreadClosed
+    isThisExecutedThread = False
+    isThreadClosed = False
     thread_trade_obj = TradingBot()
     assign_trade_bot_initialize_thread(to_be_assigned=thread_trade_obj, assigned_from=t_obj)
     thread_indicate_obj = Indicator()
@@ -111,8 +115,11 @@ def long_order_placed(
             executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadLong = True
+            isThisExecutedThread = True
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
             t_obj.order_executed_for_symbol = current_symbol
+            isThreadClosed = True
+            break
         if thread_indicate_obj.slow_speed_line < thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
             # print("Order Cancelled Successfully for", current_symbol)
             client.cancel_all_open_orders(current_symbol)
@@ -125,20 +132,29 @@ def long_order_placed(
                                                  client=client, QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
             thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
+            isThreadClosed = True
             break
-        time.sleep(TIME_SLEEP * 5)
+        if not isThreadClosed:
+            time.sleep(TIME_SLEEP * 5)
     t_obj.threadCounter += -1
+    s_obj.moved_symbols_list.remove(current_symbol)
+    if not isThisExecutedThread:
+        client.cancel_all_open_orders(current_symbol)
 
 
 def short_order_placed(
         t_obj: TradingBot,
         i_obj: Indicator,
+        s_obj: Symbols,
         current_symbol,
         current_decimal_point_price,
         current_QNTY,
         current_index,
         client: Client
 ):
+    global isThisExecutedThread, isThreadClosed
+    isThisExecutedThread = False
+    isThreadClosed = False
     thread_trade_obj = TradingBot()
     assign_trade_bot_initialize_thread(to_be_assigned=thread_trade_obj, assigned_from=t_obj)
     thread_indicate_obj = Indicator()
@@ -186,8 +202,11 @@ def short_order_placed(
             executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadShort = True
+            isThisExecutedThread = True
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
             t_obj.order_executed_for_symbol = current_symbol
+            isThreadClosed = True
+            break
         if thread_indicate_obj.slow_speed_line > thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
             # print("Order Cancelled Successfully for", current_symbol)
             client.cancel_all_open_orders(current_symbol)
@@ -200,15 +219,25 @@ def short_order_placed(
                                                  client=client, QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
             thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
+            isThreadClosed = True
             break
-        time.sleep(TIME_SLEEP * 5)
+        if not isThreadClosed:
+            time.sleep(TIME_SLEEP * 5)
     t_obj.threadCounter += -1
+    s_obj.moved_symbols_list.remove(current_symbol)
+    if not isThisExecutedThread:
+        client.cancel_all_open_orders(current_symbol)
 
 
 def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indicator, symb_obj: Symbols, db_obj: DB):
     while True:
-        print("Current Open Threads = ", trade_bot_obj.threadCounter)
+        print("")
+        print("")
+        print("")
+        print("Current Open Threads        = ", trade_bot_obj.threadCounter)
         print("Current Open Thread Details =", symb_obj.moved_symbols_list)
+        print("Symbols List Length         = ", len(symb_obj.symbols))
+
         if not trade_bot_obj.isThreadAllowed:
             trade_bot_obj.isThreadAllowed = True
             assign_trade_bot_main_open(to_be_assigned=trade_bot_obj)
@@ -241,7 +270,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
             if trade_bot_obj.isOrderPlaced and trade_bot_obj.isLongOrderPlaced:
                 placed_order_execution_check = threading.Thread(
                     target=long_order_placed, args=(
-                        trade_bot_obj, indicator_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
+                        trade_bot_obj, indicator_obj, symb_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
                         symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client()))
                 placed_order_execution_check.start()
                 trade_bot_obj.threadCounter += 1
@@ -252,7 +281,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
             elif trade_bot_obj.isOrderPlaced and trade_bot_obj.isShortOrderPlaced:
                 placed_order_execution_check = threading.Thread(
                     target=short_order_placed, args=(
-                        trade_bot_obj, indicator_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
+                        trade_bot_obj, indicator_obj, symb_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
                         symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client()))
                 placed_order_execution_check.start()
                 trade_bot_obj.threadCounter += 1
@@ -540,50 +569,51 @@ if __name__ == "__main__":
     db = DB()
     while True:
         try:
-            if os.path.exists(f'is_order_in_progress.txt'):
-                file = open(f'is_order_in_progress.txt', 'r')
-                x, y, z, xx, yy, zz, xxx, a, b, c, d, e, f, g, h = file.readlines()
-                file.close()
-                x = strip(x)
-                y = strip(y)
-                z = strip(z)
-                xx = strip(xx)
-                yy = strip(yy)
-                zz = strip(zz)
-                xxx = strip(xxx)
-                a = strip(a)
-                b = strip(b)
-                c = strip(c)
-                d = strip(d)
-                e = strip(e)
-                f = strip(f)
-                g = strip(g)
-                h = strip(h)
-                if x == "True":
-                    trading_bot_obj.isOrderInProgress = True
-                if y == "True":
-                    trading_bot_obj.isLongOrderInProgress = True
-                if z == "True":
-                    trading_bot_obj.isShortOrderInProgress = True
-                if xx == "True":
-                    trading_bot_obj.isOrderPlaced = True
-                if yy == "True":
-                    trading_bot_obj.isLongOrderPlaced = True
-                if zz == "True":
-                    trading_bot_obj.isShortOrderPlaced = True
-                if xxx == "True":
-                    trading_bot_obj.newHoffmanSignalCheck = True
-                trading_bot_obj.order_sequence = int(a)
-                trading_bot_obj.high_price = float(b)
-                trading_bot_obj.low_price = float(c)
-                trading_bot_obj.place_order_price = float(d)
-                trading_bot_obj.take_profit = float(e)
-                trading_bot_obj.stop_loss = float(f)
-                trading_bot_obj.trailing_order_price = float(g)
-                symbol_obj.current_index = int(h)
-                main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
-            else:
-                main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
+            main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
+            # if os.path.exists(f'is_order_in_progress.txt'):
+            #     file = open(f'is_order_in_progress.txt', 'r')
+            #     x, y, z, xx, yy, zz, xxx, a, b, c, d, e, f, g, h = file.readlines()
+            #     file.close()
+            #     x = strip(x)
+            #     y = strip(y)
+            #     z = strip(z)
+            #     xx = strip(xx)
+            #     yy = strip(yy)
+            #     zz = strip(zz)
+            #     xxx = strip(xxx)
+            #     a = strip(a)
+            #     b = strip(b)
+            #     c = strip(c)
+            #     d = strip(d)
+            #     e = strip(e)
+            #     f = strip(f)
+            #     g = strip(g)
+            #     h = strip(h)
+            #     if x == "True":
+            #         trading_bot_obj.isOrderInProgress = True
+            #     if y == "True":
+            #         trading_bot_obj.isLongOrderInProgress = True
+            #     if z == "True":
+            #         trading_bot_obj.isShortOrderInProgress = True
+            #     if xx == "True":
+            #         trading_bot_obj.isOrderPlaced = True
+            #     if yy == "True":
+            #         trading_bot_obj.isLongOrderPlaced = True
+            #     if zz == "True":
+            #         trading_bot_obj.isShortOrderPlaced = True
+            #     if xxx == "True":
+            #         trading_bot_obj.newHoffmanSignalCheck = True
+            #     trading_bot_obj.order_sequence = int(a)
+            #     trading_bot_obj.high_price = float(b)
+            #     trading_bot_obj.low_price = float(c)
+            #     trading_bot_obj.place_order_price = float(d)
+            #     trading_bot_obj.take_profit = float(e)
+            #     trading_bot_obj.stop_loss = float(f)
+            #     trading_bot_obj.trailing_order_price = float(g)
+            #     symbol_obj.current_index = int(h)
+            #     main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
+            # else:
+            #     main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
         except Exception as e:
             print(e)
             try:
