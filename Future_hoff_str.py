@@ -10,10 +10,219 @@ from Indicator import Indicator
 from Symbols import Symbols
 from TradingBot import TradingBot
 from Settings import above_or_below_wick, TIME_PERIOD, TIME_SLEEP, max_take_profit_limit
+from BinanceFuturesPy.futurespy import Client
+
+
+def assign_trade_bot_initialize_thread(to_be_assigned: TradingBot, assigned_from: TradingBot):
+    to_be_assigned.currency_price = assigned_from.currency_price
+    to_be_assigned.high_price = assigned_from.high_price
+    to_be_assigned.take_profit = assigned_from.take_profit
+    to_be_assigned.stop_loss = assigned_from.stop_loss
+    to_be_assigned.newHoffmanSignalCheck = assigned_from.newHoffmanSignalCheck
+    to_be_assigned.new_place_order_price = assigned_from.new_place_order_price
+    to_be_assigned.place_order_price = assigned_from.place_order_price
+
+
+def assign_trade_bot_close_thread(to_be_assigned: TradingBot, assigned_from: TradingBot):
+    to_be_assigned.thread_currency_price = assigned_from.currency_price
+    to_be_assigned.thread_high_price = assigned_from.high_price
+    to_be_assigned.thread_take_profit = assigned_from.take_profit
+    to_be_assigned.thread_stop_loss = assigned_from.stop_loss
+    to_be_assigned.thread_newHoffmanSignalCheck = assigned_from.newHoffmanSignalCheck
+    to_be_assigned.thread_new_place_order_price = assigned_from.new_place_order_price
+    to_be_assigned.thread_place_order_price = assigned_from.place_order_price
+
+
+def assign_trade_bot_main_open(to_be_assigned: TradingBot):
+    to_be_assigned.currency_price = to_be_assigned.thread_currency_price
+    to_be_assigned.high_price = to_be_assigned.thread_high_price
+    to_be_assigned.take_profit = to_be_assigned.thread_take_profit
+    to_be_assigned.stop_loss = to_be_assigned.thread_stop_loss
+    to_be_assigned.newHoffmanSignalCheck = to_be_assigned.thread_newHoffmanSignalCheck
+    to_be_assigned.new_place_order_price = to_be_assigned.thread_new_place_order_price
+    to_be_assigned.place_order_price = to_be_assigned.thread_place_order_price
+
+
+def assign_indicate_obj(to_be_assigned_ind_obj: Indicator, assigned_from_ind_obj: Indicator):
+    to_be_assigned_ind_obj.long_signal_candle = assigned_from_ind_obj.long_signal_candle
+    to_be_assigned_ind_obj.slow_speed_line = assigned_from_ind_obj.slow_speed_line
+    to_be_assigned_ind_obj.fast_primary_trend_line = assigned_from_ind_obj.fast_primary_trend_line
+
+
+def long_order_placed(
+        t_obj: TradingBot,
+        i_obj: Indicator,
+        current_symbol,
+        current_decimal_point_price,
+        current_QNTY,
+        current_index,
+        client: Client
+):
+    thread_trade_obj = TradingBot()
+    assign_trade_bot_initialize_thread(to_be_assigned=thread_trade_obj, assigned_from=t_obj)
+    thread_indicate_obj = Indicator()
+    assign_indicate_obj(to_be_assigned_ind_obj=thread_indicate_obj, assigned_from_ind_obj=i_obj)
+
+    while t_obj.isThreadAllowed:
+
+        open_price, high, low, close = thread_trade_obj.get_data(SYMBOL=current_symbol)
+        thread_indicate_obj.calculate(open_price=open_price, high=high, low=low, close=close)
+        thread_trade_obj.currency_price = thread_trade_obj.get_price(SYMBOL=current_symbol)
+        # print("\n--------- Currency ---------")
+        # print(current_symbol, ":", thread_trade_obj.currency_price)
+        # print("\n************** Strategy Result Long Placed at: ",
+        #       thread_trade_obj.high_price + (thread_trade_obj.high_price * above_or_below_wick / 100), " ***********",
+        #       datetime.now(), "***********")
+        # print(f"Take Profit {thread_trade_obj.take_profit} |-------| Stop Loss {thread_trade_obj.stop_loss}")
+        if not thread_indicate_obj.long_signal_candle:
+            thread_trade_obj.newHoffmanSignalCheck = True
+        if thread_indicate_obj.long_signal_candle:
+            thread_trade_obj.newHoffmanSignalCheck = False
+            thread_trade_obj.high_price = np.array(high)[-2]
+            thread_trade_obj.new_place_order_price = round(
+                thread_trade_obj.high_price + (thread_trade_obj.high_price * above_or_below_wick / 100),
+                current_decimal_point_price)
+            if thread_trade_obj.new_place_order_price != thread_trade_obj.place_order_price:
+                client.cancel_all_open_orders(current_symbol)
+                thread_trade_obj.place_order_price = thread_trade_obj.new_place_order_price
+                thread_trade_obj.place_long_order(long=thread_trade_obj.place_order_price,
+                                                  SYMBOL=current_symbol,
+                                                  client=client,
+                                                  Decimal_point_price=current_decimal_point_price,
+                                                  QNTY=current_QNTY)
+                thread_trade_obj.stop_loss = ((
+                                                          thread_trade_obj.place_order_price - thread_indicate_obj.fast_primary_trend_line) / thread_trade_obj.place_order_price) * 100
+                thread_trade_obj.take_profit = thread_trade_obj.stop_loss * thread_trade_obj.profit_ratio
+                thread_trade_obj.update_data_set(side="LongUpdated", SYMBOL=current_symbol,
+                                                 client=client,
+                                                 QNTY=current_QNTY)
+                thread_trade_obj.write_to_file(currentIndex=current_index)
+
+        if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
+            print("Order Executed Successfully for",current_symbol)
+            thread_trade_obj.update_data_set(side="LongExecuted", SYMBOL=current_symbol,
+                                             client=client,
+                                             QNTY=current_QNTY)
+            thread_trade_obj.place_in_progress_order_limits(SYMBOL=current_symbol, client=client,
+                                                            Decimal_point_price=current_decimal_point_price,
+                                                            QNTY=current_QNTY)
+            thread_trade_obj.write_to_file(currentIndex=current_index)
+            executed_order_on_wick_check = threading.Thread(target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
+            executed_order_on_wick_check.start()
+            t_obj.isThreadAllowed = False
+            t_obj.wasThreadLong = True
+            assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
+            t_obj.order_executed_for_symbol = current_symbol
+        if thread_indicate_obj.slow_speed_line < thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
+            print("Order Cancelled Successfully for",current_symbol)
+            client.cancel_all_open_orders(current_symbol)
+            thread_trade_obj.newHoffmanSignalCheck = False
+            if thread_trade_obj.take_profit > max_take_profit_limit:
+                thread_trade_obj.update_data_set(side="LongCancelledHigh", SYMBOL=current_symbol,
+                                                 client=client, QNTY=current_QNTY)
+            else:
+                thread_trade_obj.update_data_set(side="LongCancelled", SYMBOL=current_symbol,
+                                                 client=client, QNTY=current_QNTY)
+            thread_trade_obj.write_to_file(currentIndex=current_index)
+            thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
+            break
+        time.sleep(TIME_SLEEP * 5)
+    t_obj.threadCounter += -1
+
+
+def short_order_placed(
+        t_obj: TradingBot,
+        i_obj: Indicator,
+        current_symbol,
+        current_decimal_point_price,
+        current_QNTY,
+        current_index,
+        client: Client
+):
+    thread_trade_obj = TradingBot()
+    assign_trade_bot_initialize_thread(to_be_assigned=thread_trade_obj, assigned_from=t_obj)
+    thread_indicate_obj = Indicator()
+    assign_indicate_obj(to_be_assigned_ind_obj=thread_indicate_obj, assigned_from_ind_obj=i_obj)
+
+    while t_obj.isThreadAllowed:
+        open_price, high, low, close = thread_trade_obj.get_data(SYMBOL=current_symbol)
+        thread_indicate_obj.calculate(open_price=open_price, high=high, low=low, close=close)
+        thread_trade_obj.currency_price = thread_trade_obj.get_price(SYMBOL=current_symbol)
+        # print("\n--------- Currency ---------")
+        # print(current_symbol, ":", thread_trade_obj.currency_price)
+        # print("\n************** Strategy Result Short Placed at: ", thread_trade_obj.place_order_price,
+        #       " ***********", datetime.now(), "***********")
+        # print(f"Take Profit {thread_trade_obj.take_profit} |-------| Stop Loss {thread_trade_obj.stop_loss}")
+        if not thread_indicate_obj.short_signal_candle:
+            thread_trade_obj.newHoffmanSignalCheck = True
+        if thread_indicate_obj.short_signal_candle:
+            thread_trade_obj.newHoffmanSignalCheck = False
+            thread_trade_obj.low_price = np.array(low)[-2]
+            thread_trade_obj.new_place_order_price = round(
+                thread_trade_obj.low_price - (thread_trade_obj.low_price * above_or_below_wick / 100),
+                current_decimal_point_price)
+            if thread_trade_obj.new_place_order_price != thread_trade_obj.place_order_price:
+                client.cancel_all_open_orders(current_symbol)
+                thread_trade_obj.place_order_price = thread_trade_obj.new_place_order_price
+                thread_trade_obj.place_short_order(short=thread_trade_obj.place_order_price,
+                                                   SYMBOL=current_symbol, client=client,
+                                                   Decimal_point_price=current_decimal_point_price,
+                                                   QNTY=current_QNTY)
+                thread_trade_obj.stop_loss = (thread_indicate_obj.fast_primary_trend_line - thread_trade_obj.place_order_price) / thread_trade_obj.place_order_price * 100
+                thread_trade_obj.take_profit = thread_trade_obj.stop_loss * thread_trade_obj.profit_ratio
+                thread_trade_obj.update_data_set(side="ShortUpdated", SYMBOL=current_symbol,
+                                                 client=client, QNTY=current_QNTY)
+                thread_trade_obj.write_to_file(currentIndex=current_index)
+        if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
+            print("Order Executed Successfully for",current_symbol)
+            thread_trade_obj.update_data_set(side="ShortExecuted", SYMBOL=current_symbol,
+                                             client=client, QNTY=current_QNTY)
+            thread_trade_obj.place_in_progress_order_limits(SYMBOL=current_symbol,
+                                                            client=client,
+                                                            Decimal_point_price=current_decimal_point_price,
+                                                            QNTY=current_QNTY)
+            thread_trade_obj.write_to_file(currentIndex=current_index)
+            executed_order_on_wick_check = threading.Thread(target=thread_trade_obj.executed_order_on_wick_check,args=(current_symbol, client, current_QNTY))
+            executed_order_on_wick_check.start()
+            t_obj.isThreadAllowed = False
+            t_obj.wasThreadShort = True
+            assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
+            t_obj.order_executed_for_symbol = current_symbol
+        if thread_indicate_obj.slow_speed_line > thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
+            print("Order Cancelled Successfully for",current_symbol)
+            client.cancel_all_open_orders(current_symbol)
+            thread_trade_obj.newHoffmanSignalCheck = False
+            if thread_trade_obj.take_profit > max_take_profit_limit:
+                thread_trade_obj.update_data_set(side="ShortCancelledHigh", SYMBOL=current_symbol,
+                                                 client=client, QNTY=current_QNTY)
+            else:
+                thread_trade_obj.update_data_set(side="ShortCancelled", SYMBOL=current_symbol,
+                                                 client=client, QNTY=current_QNTY)
+            thread_trade_obj.write_to_file(currentIndex=current_index)
+            thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
+            break
+        time.sleep(TIME_SLEEP * 5)
+    t_obj.threadCounter += -1
 
 
 def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indicator, symb_obj: Symbols, db_obj: DB):
     while True:
+        print("Current Open Threads = ", trade_bot_obj.threadCounter)
+        print("Current Open Thread Details =", symb_obj.moved_symbols_list)
+        if not trade_bot_obj.isThreadAllowed:
+            trade_bot_obj.isThreadAllowed = True
+            assign_trade_bot_main_open(to_be_assigned=trade_bot_obj)
+            symb_obj.reset_symbol()
+            symb_obj.increment_to_specific_symbol(symbol=trade_bot_obj.order_executed_for_symbol)
+            if trade_bot_obj.wasThreadLong:
+                trade_bot_obj.wasThreadLong = False
+                trade_bot_obj.isOrderInProgress = True
+                trade_bot_obj.isLongOrderInProgress = True
+            elif trade_bot_obj.wasThreadShort:
+                trade_bot_obj.wasThreadShort = False
+                trade_bot_obj.isOrderInProgress = True
+                trade_bot_obj.isShortOrderInProgress = True
+
         db_obj.initialize_db(symb_obj.current_symbol)
         open_price, high, low, close = symb_obj.get_data(timeframe=TIME_PERIOD)
         indicator_obj.calculate(open_price=open_price, high=high, low=low, close=close)
@@ -30,102 +239,28 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
 
         else:
             if trade_bot_obj.isOrderPlaced and trade_bot_obj.isLongOrderPlaced:
-                print("\n--------- Currency ---------")
-                print(symb_obj.current_symbol, ":", trade_bot_obj.currency_price)
-                print("\n************** Strategy Result Long Placed at: ",
-                      trade_bot_obj.high_price + (trade_bot_obj.high_price * above_or_below_wick / 100), " ***********",
-                      datetime.now(), "***********")
-                print(f"Take Profit {trade_bot_obj.take_profit} |-------| Stop Loss {trade_bot_obj.stop_loss}")
-                if not indicator_obj.long_signal_candle:
-                    trade_bot_obj.newHoffmanSignalCheck = True
-                if indicator_obj.long_signal_candle:
-                    trade_bot_obj.newHoffmanSignalCheck = False
-                    trade_bot_obj.high_price = np.array(high)[-2]
-                    trade_bot_obj.new_place_order_price = round(
-                        trade_bot_obj.high_price + (trade_bot_obj.high_price * above_or_below_wick / 100),
-                        symb_obj.current_decimal_point_price)
-                    if trade_bot_obj.new_place_order_price != trade_bot_obj.place_order_price:
-                        symb_obj.client().cancel_all_open_orders(symb_obj.current_symbol)
-                        trade_bot_obj.place_order_price = trade_bot_obj.new_place_order_price
-                        trade_bot_obj.place_long_order(long=trade_bot_obj.place_order_price,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
-                        trade_bot_obj.stop_loss = ((trade_bot_obj.place_order_price - indicator_obj.fast_primary_trend_line) / trade_bot_obj.place_order_price) * 100
-                        trade_bot_obj.take_profit = trade_bot_obj.stop_loss * trade_bot_obj.profit_ratio
-                        trade_bot_obj.update_data_set(side="LongUpdated",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                        trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
-
-                if trade_bot_obj.position_quantity(SYMBOL=symb_obj.current_symbol, client=symb_obj.client()) > 0:
-                    print("Order Executed Successfully")
-                    trade_bot_obj.isOrderPlaced = False
-                    trade_bot_obj.isLongOrderPlaced = False
-                    trade_bot_obj.newHoffmanSignalCheck = False
-                    trade_bot_obj.isOrderInProgress = True
-                    trade_bot_obj.isLongOrderInProgress = True
-                    trade_bot_obj.update_data_set(side="LongExecuted",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    trade_bot_obj.place_in_progress_order_limits(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
-                    trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
-                    executed_order_on_wick_check = threading.Thread(target=trade_bot_obj.executed_order_on_wick_check(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY))
-                    executed_order_on_wick_check.start()
-                if indicator_obj.slow_speed_line < indicator_obj.fast_primary_trend_line or trade_bot_obj.take_profit > max_take_profit_limit:
-                    print("Order Cancelled Successfully")
-                    symb_obj.client().cancel_all_open_orders(symb_obj.current_symbol)
-                    trade_bot_obj.isOrderPlaced = False
-                    trade_bot_obj.isLongOrderPlaced = False
-                    trade_bot_obj.newHoffmanSignalCheck = False
-                    if trade_bot_obj.take_profit > max_take_profit_limit:
-                        trade_bot_obj.update_data_set(side="LongCancelledHigh",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    else:
-                        trade_bot_obj.update_data_set(side="LongCancelled",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
-                    trade_bot_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
+                placed_order_execution_check = threading.Thread(
+                    target=long_order_placed, args=(
+                        trade_bot_obj, indicator_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
+                        symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client()))
+                placed_order_execution_check.start()
+                trade_bot_obj.threadCounter += 1
+                time.sleep(TIME_SLEEP)
+                trade_bot_obj.isOrderPlaced = False
+                trade_bot_obj.isLongOrderPlaced = False
+                symb_obj.move_symbols()
             elif trade_bot_obj.isOrderPlaced and trade_bot_obj.isShortOrderPlaced:
-                print("\n--------- Currency ---------")
-                print(symb_obj.current_symbol, ":", trade_bot_obj.currency_price)
-                print("\n************** Strategy Result Short Placed at: ", trade_bot_obj.place_order_price,
-                      " ***********", datetime.now(), "***********")
-                print(f"Take Profit {trade_bot_obj.take_profit} |-------| Stop Loss {trade_bot_obj.stop_loss}")
-                if not indicator_obj.short_signal_candle:
-                    trade_bot_obj.newHoffmanSignalCheck = True
-                if indicator_obj.short_signal_candle:
-                    trade_bot_obj.newHoffmanSignalCheck = False
-                    trade_bot_obj.low_price = np.array(low)[-2]
-                    trade_bot_obj.new_place_order_price = round(
-                        trade_bot_obj.low_price - (trade_bot_obj.low_price * above_or_below_wick / 100),
-                        symb_obj.current_decimal_point_price)
-                    if trade_bot_obj.new_place_order_price != trade_bot_obj.place_order_price:
-                        symb_obj.client().cancel_all_open_orders(symb_obj.current_symbol)
-                        trade_bot_obj.place_order_price = trade_bot_obj.new_place_order_price
-                        trade_bot_obj.place_short_order(short=trade_bot_obj.place_order_price,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
-                        trade_bot_obj.stop_loss = (indicator_obj.fast_primary_trend_line - trade_bot_obj.place_order_price) / \
-                                                  trade_bot_obj.place_order_price * 100
-                        trade_bot_obj.take_profit = trade_bot_obj.stop_loss * trade_bot_obj.profit_ratio
-                        trade_bot_obj.update_data_set(side="ShortUpdated",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                        trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
-                if trade_bot_obj.position_quantity(SYMBOL=symb_obj.current_symbol,client=symb_obj.client()) > 0:
-                    print("Order Executed Successfully")
-                    trade_bot_obj.isOrderPlaced = False
-                    trade_bot_obj.isShortOrderPlaced = False
-                    trade_bot_obj.newHoffmanSignalCheck = False
-                    trade_bot_obj.isOrderInProgress = True
-                    trade_bot_obj.isShortOrderInProgress = True
-                    trade_bot_obj.update_data_set(side="ShortExecuted",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    trade_bot_obj.place_in_progress_order_limits(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
-                    trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
-                    executed_order_on_wick_check = threading.Thread(target=trade_bot_obj.executed_order_on_wick_check(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY))
-                    executed_order_on_wick_check.start()
-                if indicator_obj.slow_speed_line > indicator_obj.fast_primary_trend_line or trade_bot_obj.take_profit > max_take_profit_limit:
-                    print("Order Cancelled Successfully")
-                    symb_obj.client().cancel_all_open_orders(symb_obj.current_symbol)
-                    trade_bot_obj.isOrderPlaced = False
-                    trade_bot_obj.isShortOrderPlaced = False
-                    trade_bot_obj.newHoffmanSignalCheck = False
-                    if trade_bot_obj.take_profit > max_take_profit_limit:
-                        trade_bot_obj.update_data_set(side="ShortCancelledHigh",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    else:
-                        trade_bot_obj.update_data_set(side="ShortCancelled",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
-                    trade_bot_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
+                placed_order_execution_check = threading.Thread(
+                    target=short_order_placed, args=(
+                        trade_bot_obj, indicator_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
+                        symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client()))
+                placed_order_execution_check.start()
+                trade_bot_obj.threadCounter += 1
+                time.sleep(TIME_SLEEP)
+                trade_bot_obj.isOrderPlaced = False
+                trade_bot_obj.isShortOrderPlaced = False
+                symb_obj.move_symbols()
             elif trade_bot_obj.isOrderInProgress and trade_bot_obj.isLongOrderInProgress:
-
                 if trade_bot_obj.currency_price < trade_bot_obj.place_order_price:
                     if counter_obj.isInProfit:
                         counter_obj.isInProfit = False
@@ -160,10 +295,15 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                          100))
                 print("\n************** Strategy Result Long In Progress ***********", datetime.now(), "***********")
                 counter_obj.long_print()
-                trade_bot_obj.place_trailing_stop_loss(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
+                trade_bot_obj.place_trailing_stop_loss(SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                       Decimal_point_price=symb_obj.current_decimal_point_price,
+                                                       QNTY=symb_obj.current_QNTY)
 
                 if counter_obj.is_order_in_profit_again(side="buy") and not counter_obj.isProfitCheckPerformed:
-                    trade_bot_obj.trailing_stop_loss_order(stop_loss_price=trade_bot_obj.place_order_price,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.trailing_stop_loss_order(stop_loss_price=trade_bot_obj.place_order_price,
+                                                           SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                           Decimal_point_price=symb_obj.current_decimal_point_price,
+                                                           QNTY=symb_obj.current_QNTY)
                     trade_bot_obj.isBreakEvenCalled = True
                     counter_obj.isProfitCheckPerformed = True
 
@@ -171,10 +311,12 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     if trade_bot_obj.currency_price > trade_bot_obj.place_order_price + (
                             trade_bot_obj.place_order_price * 0.0015):
                         trade_bot_obj.trailing_stop_loss_order(
-                            stop_loss_price=trade_bot_obj.place_order_price + (trade_bot_obj.place_order_price * 0.001),SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
+                            stop_loss_price=trade_bot_obj.place_order_price + (trade_bot_obj.place_order_price * 0.001),
+                            SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                            Decimal_point_price=symb_obj.current_decimal_point_price, QNTY=symb_obj.current_QNTY)
                         trade_bot_obj.isBreakEvenCalled = False
 
-                if trade_bot_obj.position_quantity(SYMBOL=symb_obj.current_symbol,client=symb_obj.client()) == 0:
+                if trade_bot_obj.position_quantity(SYMBOL=symb_obj.current_symbol, client=symb_obj.client()) == 0:
                     symb_obj.client().cancel_all_open_orders(symb_obj.current_symbol)
                     if trade_bot_obj.LongHit == "LongHit" and trade_bot_obj.currency_price > trade_bot_obj.place_order_price:
                         trade_bot_obj.LongHit = "LongHitProfit"
@@ -184,25 +326,30 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.isLongOrderInProgress = False
                     trade_bot_obj.isBreakEvenCalled = False
                     trade_bot_obj.order_sequence += 1
-                    trade_bot_obj.update_data_set(side=trade_bot_obj.LongHit,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    counter_obj.update_data_set_tickers(side="buy", SYMBOL=symb_obj.current_symbol, LongHit=trade_bot_obj.LongHit,
+                    trade_bot_obj.update_data_set(side=trade_bot_obj.LongHit, SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
+                    counter_obj.update_data_set_tickers(side="buy", SYMBOL=symb_obj.current_symbol,
+                                                        LongHit=trade_bot_obj.LongHit,
                                                         ShortHit=trade_bot_obj.ShortHit,
                                                         order_sequence=trade_bot_obj.order_sequence,
                                                         place_order_price=trade_bot_obj.place_order_price,
                                                         currency_price=trade_bot_obj.currency_price)
                     counter_obj.long_clear()
                     trade_bot_obj.LongHit = "LongHit"
-                    trade_bot_obj.write_to_file(currentIndex= symb_obj.current_index)
+                    trade_bot_obj.write_to_file(currentIndex=symb_obj.current_index)
                 if indicator_obj.slow_speed_line < indicator_obj.fast_primary_trend_line:
                     print("Order In-Progress Cancelled Successfully")
                     trade_bot_obj.LongHit = "LongHitCrossing"
                     trade_bot_obj.isOrderInProgress = False
                     trade_bot_obj.isLongOrderInProgress = False
                     trade_bot_obj.isBreakEvenCalled = False
-                    trade_bot_obj.cancel_executed_orders(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.cancel_executed_orders(SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                         QNTY=symb_obj.current_QNTY)
                     trade_bot_obj.order_sequence += 1
-                    trade_bot_obj.update_data_set(side=trade_bot_obj.LongHit,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    counter_obj.update_data_set_tickers(side="buy", SYMBOL=symb_obj.current_symbol, LongHit=trade_bot_obj.LongHit,
+                    trade_bot_obj.update_data_set(side=trade_bot_obj.LongHit, SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
+                    counter_obj.update_data_set_tickers(side="buy", SYMBOL=symb_obj.current_symbol,
+                                                        LongHit=trade_bot_obj.LongHit,
                                                         ShortHit=trade_bot_obj.ShortHit,
                                                         order_sequence=trade_bot_obj.order_sequence,
                                                         place_order_price=trade_bot_obj.place_order_price,
@@ -212,11 +359,12 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.write_to_file(currentIndex=symb_obj.current_index)
                 if not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isLongOrderInProgress:
                     print("Long Order Sleep Time is Called")
-                    trade_bot_obj.update_data_set(side="sleep started",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.update_data_set(side="sleep started", SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
                     trade_bot_obj.time_dot_round(TIME_PERIOD)
-                    trade_bot_obj.update_data_set(side="sleep ended",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.update_data_set(side="sleep ended", SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
             elif trade_bot_obj.isOrderInProgress and trade_bot_obj.isShortOrderInProgress:
-
                 if trade_bot_obj.currency_price > trade_bot_obj.place_order_price:
                     if counter_obj.isInProfit:
                         counter_obj.isInProfit = False
@@ -252,10 +400,15 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                                          100))
                 print("\n************** Strategy Result Short In Progress ***********", datetime.now(), "***********")
                 counter_obj.short_print()
-                trade_bot_obj.place_trailing_stop_loss(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
+                trade_bot_obj.place_trailing_stop_loss(SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                       Decimal_point_price=symb_obj.current_decimal_point_price,
+                                                       QNTY=symb_obj.current_QNTY)
 
                 if counter_obj.is_order_in_profit_again(side="sell") and not counter_obj.isProfitCheckPerformed:
-                    trade_bot_obj.trailing_stop_loss_order(stop_loss_price=trade_bot_obj.place_order_price,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.trailing_stop_loss_order(stop_loss_price=trade_bot_obj.place_order_price,
+                                                           SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                           Decimal_point_price=symb_obj.current_decimal_point_price,
+                                                           QNTY=symb_obj.current_QNTY)
                     trade_bot_obj.isBreakEvenCalled = True
                     counter_obj.isProfitCheckPerformed = True
 
@@ -263,10 +416,13 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     if trade_bot_obj.currency_price < trade_bot_obj.place_order_price - (
                             trade_bot_obj.place_order_price * 0.0015):
                         trade_bot_obj.trailing_stop_loss_order(
-                            stop_loss_price=(trade_bot_obj.place_order_price - (trade_bot_obj.place_order_price * 0.001)),SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
+                            stop_loss_price=(
+                                    trade_bot_obj.place_order_price - (trade_bot_obj.place_order_price * 0.001)),
+                            SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                            Decimal_point_price=symb_obj.current_decimal_point_price, QNTY=symb_obj.current_QNTY)
                         trade_bot_obj.isBreakEvenCalled = False
 
-                if trade_bot_obj.position_quantity(SYMBOL=symb_obj.current_symbol,client=symb_obj.client()) == 0:
+                if trade_bot_obj.position_quantity(SYMBOL=symb_obj.current_symbol, client=symb_obj.client()) == 0:
                     symb_obj.client().cancel_all_open_orders(symb_obj.current_symbol)
                     if trade_bot_obj.ShortHit == "ShortHit" and trade_bot_obj.currency_price < trade_bot_obj.place_order_price:
                         trade_bot_obj.ShortHit = "ShortHitProfit"
@@ -276,8 +432,10 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.isShortOrderInProgress = False
                     trade_bot_obj.isBreakEvenCalled = False
                     trade_bot_obj.order_sequence += 1
-                    trade_bot_obj.update_data_set(trade_bot_obj.ShortHit,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    counter_obj.update_data_set_tickers(side="sell", SYMBOL=symb_obj.current_symbol, LongHit=trade_bot_obj.LongHit,
+                    trade_bot_obj.update_data_set(trade_bot_obj.ShortHit, SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
+                    counter_obj.update_data_set_tickers(side="sell", SYMBOL=symb_obj.current_symbol,
+                                                        LongHit=trade_bot_obj.LongHit,
                                                         ShortHit=trade_bot_obj.ShortHit,
                                                         order_sequence=trade_bot_obj.order_sequence,
                                                         place_order_price=trade_bot_obj.place_order_price,
@@ -291,10 +449,13 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.isOrderInProgress = False
                     trade_bot_obj.isShortOrderInProgress = False
                     trade_bot_obj.isBreakEvenCalled = False
-                    trade_bot_obj.cancel_executed_orders(SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.cancel_executed_orders(SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                         QNTY=symb_obj.current_QNTY)
                     trade_bot_obj.order_sequence += 1
-                    trade_bot_obj.update_data_set(trade_bot_obj.ShortHit,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
-                    counter_obj.update_data_set_tickers(side="sell", SYMBOL=symb_obj.current_symbol, LongHit=trade_bot_obj.LongHit,
+                    trade_bot_obj.update_data_set(trade_bot_obj.ShortHit, SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
+                    counter_obj.update_data_set_tickers(side="sell", SYMBOL=symb_obj.current_symbol,
+                                                        LongHit=trade_bot_obj.LongHit,
                                                         ShortHit=trade_bot_obj.ShortHit,
                                                         order_sequence=trade_bot_obj.order_sequence,
                                                         place_order_price=trade_bot_obj.place_order_price,
@@ -304,9 +465,11 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.write_to_file(currentIndex=symb_obj.current_index)
                 if not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isShortOrderInProgress:
                     print("Short Order Sleep Time is Called")
-                    trade_bot_obj.update_data_set(side="sleep started",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.update_data_set(side="sleep started", SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
                     trade_bot_obj.time_dot_round(TIME_PERIOD)
-                    trade_bot_obj.update_data_set(side="sleep ended",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                    trade_bot_obj.update_data_set(side="sleep ended", SYMBOL=symb_obj.current_symbol,
+                                                  client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
             elif not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isOrderPlaced:
                 print("\n--------- Currency ---------")
                 print(symb_obj.current_symbol, ":", trade_bot_obj.currency_price)
@@ -330,8 +493,12 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                             trade_bot_obj.take_profit = trade_bot_obj.stop_loss * trade_bot_obj.profit_ratio
                             trade_bot_obj.isOrderPlaced = True
                             trade_bot_obj.isLongOrderPlaced = True
-                            trade_bot_obj.place_long_order(long=trade_bot_obj.place_order_price,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
-                            trade_bot_obj.update_data_set(side="LongOrderPlaced",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                            trade_bot_obj.place_long_order(long=trade_bot_obj.place_order_price,
+                                                           SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                           Decimal_point_price=symb_obj.current_decimal_point_price,
+                                                           QNTY=symb_obj.current_QNTY)
+                            trade_bot_obj.update_data_set(side="LongOrderPlaced", SYMBOL=symb_obj.current_symbol,
+                                                          client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
                             trade_bot_obj.write_to_file(currentIndex=symb_obj.current_index)
                             counter_obj.isProfitCheckPerformed = False
                 else:
@@ -346,17 +513,21 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                                 trade_bot_obj.low_price - (trade_bot_obj.low_price * above_or_below_wick / 100),
                                 symb_obj.current_decimal_point_price)
                             trade_bot_obj.trailing_order_price = trade_bot_obj.place_order_price
-                            trade_bot_obj.stop_loss = (indicator_obj.fast_primary_trend_line - trade_bot_obj.place_order_price) / trade_bot_obj.place_order_price * 100
+                            trade_bot_obj.stop_loss = (
+                                                              indicator_obj.fast_primary_trend_line - trade_bot_obj.place_order_price) / trade_bot_obj.place_order_price * 100
                             trade_bot_obj.take_profit = trade_bot_obj.stop_loss * trade_bot_obj.profit_ratio
                             trade_bot_obj.isOrderPlaced = True
                             trade_bot_obj.isShortOrderPlaced = True
-                            trade_bot_obj.place_short_order(short=trade_bot_obj.place_order_price,SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),Decimal_point_price=symb_obj.current_decimal_point_price,QNTY=symb_obj.current_QNTY)
-                            trade_bot_obj.update_data_set(side="ShortOrderPlaced",SYMBOL=symb_obj.current_symbol,client=symb_obj.client(),QNTY=symb_obj.current_QNTY)
+                            trade_bot_obj.place_short_order(short=trade_bot_obj.place_order_price,
+                                                            SYMBOL=symb_obj.current_symbol, client=symb_obj.client(),
+                                                            Decimal_point_price=symb_obj.current_decimal_point_price,
+                                                            QNTY=symb_obj.current_QNTY)
+                            trade_bot_obj.update_data_set(side="ShortOrderPlaced", SYMBOL=symb_obj.current_symbol,
+                                                          client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
                             trade_bot_obj.write_to_file(currentIndex=symb_obj.current_index)
                             counter_obj.isProfitCheckPerformed = False
                 if not trade_bot_obj.isOrderPlaced:
                     symb_obj.increment()
-
 
         time.sleep(TIME_SLEEP)
 
@@ -365,7 +536,7 @@ if __name__ == "__main__":
     counters_obj = Counters()
     indicators_obj = Indicator()
     trading_bot_obj = TradingBot()
-    symbol_obj = Symbols(3)
+    symbol_obj = Symbols(3, 0)
     db = DB()
     while True:
         try:

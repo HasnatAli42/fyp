@@ -50,7 +50,7 @@ class Indicator:
                                                                                       np.array(low)[-2],
                                                                                       np.array(close)[-2], 45)
 
-    def analyze_trend(self,close):
+    def analyze_trend(self, close):
         close = np.array(close)
         self.EMA_LOW_TIME_FRAME = talib.EMA(close, 50)[-1]
         self.EMA_HIGH_TIME_FRAME = talib.EMA(close, 100)[-1]
@@ -63,6 +63,13 @@ class Indicator:
 
     def calculate_range(self, provided_array_higher,provided_array_lower, check_nearest):
         global provided_array
+        provided_array_higher = np.array(provided_array_higher)
+        provided_array_lower = np.array(provided_array_lower)
+        for current_index in range(0, len(provided_array_higher)-1, 1):
+            if not provided_array_higher[current_index] > provided_array_lower[current_index]:
+                swap = provided_array_higher[current_index]
+                provided_array_higher[current_index] = provided_array_lower[current_index]
+                provided_array_lower[current_index] = swap
         if self.isBullishTrend:
             provided_array = np.array(provided_array_lower)
         elif self.isBearishTrend:
@@ -74,16 +81,22 @@ class Indicator:
             else:
                 self.isDinRange = False
 
-    def find_x_a_b_c_d(self, open_price, high, low, close, find_range ):
+    def find_x_a_b_c_d(self, open_price, high, low, close, find_range):
         global index, x,a,b,c,d
-        open_price = np.array(open_price)
-        high = np.array(high)
-        low = np.array(low)
-        close = np.array(close)
+        high = np.array(open_price)
+        low = np.array(close)
+        for current_range in range(0, len(high)-1, 1):
+            if high[current_range] > low[current_range]:
+                pass
+            else:
+                swap = high[current_range]
+                high[current_range] = low[current_range]
+                low[current_range] = swap
+
         if self.isBullishTrend:
             current_range = find_range
             d = low[-1]
-            for current_index in range(len(low)-1,0,-1):
+            for current_index in range(len(low)-1, 0, -1):
                 if low[current_index]< d:
                     # print("D Swapped at index = ",current_index)
                     d = low[current_index]

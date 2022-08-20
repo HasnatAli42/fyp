@@ -31,3 +31,6 @@ symbols = ["BTCBUSD", "ETHBUSD", "SOLBUSD", "BNBBUSD", "ETCBUSD", "FILBUSD", "MA
            "OMGBUSD", "XVGBUSD", "BIFIBUSD", "BNTBUSD", "BLZBUSD", "UTKBUSD", "DFBUSD", "JSTBUSD", "DNTBUSD", 'TBUSD',
            "GHSTBUSD", "DOCKBUSD", "MLNBUSD", "FORBUSD", "FISBUSD", "CKBBUSD", "POWRBUSD", "NKNBUSD", "SCBUSD",
            "CVCBUSD", "XNOBUSD", "PLABUSD", "OXTBUSD", "STEEMBUSD", "POLYBUSD"]
+
+Decimal_point_qty = [5, 4]
+Decimal_point_price = [2, 2]

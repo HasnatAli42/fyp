@@ -31,6 +31,8 @@ class TradingBot:
         self.new_place_order_price = 0
         self.newHoffmanSignalCheck = False
         self.isBreakEvenCalled = False
+        self.isThreadAllowed = True
+        self.threadCounter = 0
         self.LongHit = "LongHit"
         self.ShortHit = "ShortHit"
         self.take_profit = 1
@@ -40,6 +42,16 @@ class TradingBot:
         self.order2 = ""
         self.shortCounter = 0
         self.LongCounter = 0
+        self.order_executed_for_symbol = ""
+        self.wasThreadLong = False
+        self.wasThreadShort = False
+        self.thread_currency_price = 0
+        self.thread_high_price = 0
+        self.thread_take_profit = 0
+        self.thread_stop_loss = 0
+        self.thread_newHoffmanSignalCheck = False
+        self.thread_new_place_order_price = 0
+        self.thread_place_order_price = 0
 
     def update_data_set(self, side, SYMBOL, client, QNTY):
         global total_wallet_balance, available_balance
@@ -260,6 +272,17 @@ class TradingBot:
         sub_result = [np.mean(data[i - smaPeriod + 1: i + 1]) for i in our_range]
 
         return np.array(empty_list + sub_result)
+
+
+    def get_price(self, SYMBOL):
+        try:
+            url = f"https://fapi.binance.com/fapi/v1/ticker/price?symbol={SYMBOL}"
+        except Exception as e:
+            time.sleep(180)
+            url = f"https://fapi.binance.com/fapi/v1/ticker/price?symbol={SYMBOL}"
+        res = requests.get(url)
+        self.current_symbol_price = float(res.json()['price'])
+        return self.current_symbol_price
 
     def get_data(self, SYMBOL):
         url = "https://fapi.binance.com/fapi/v1/klines?symbol={}&interval={}&limit={}".format(SYMBOL, TIME_PERIOD,

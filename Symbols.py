@@ -6,6 +6,16 @@ import requests
 from BinanceFuturesPy.futurespy import Client
 from Settings import TIME_PERIOD, LIMIT, Dollars, Leverage
 
+symbols = ["BTCBUSD", "ETHBUSD", "BNBBUSD", "ADABUSD", "XRPBUSD", "DOGEBUSD", "SOLBUSD", "FTTBUSD",
+           "AVAXBUSD", "NEARBUSD", "GMTBUSD", "APEBUSD", "GALBUSD", "FTMBUSD", "DODOBUSD", "ANCBUSD",
+           "GALABUSD", "TRXBUSD", "1000LUNCBUSD", "LUNA2BUSD", "DOTBUSD", "TLMBUSD", "ICPBUSD",
+           "WAVESBUSD", "LINKBUSD", "SANDBUSD", "LTCBUSD", "MATICBUSD", "CVXBUSD", "FILBUSD",
+           "1000SHIBBUSD", "LEVERBUSD", "ETCBUSD", "LDOBUSD"]
+decimal_point_qty = [3, 3, 2, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 1,
+                     1, 0, 0, 1, 1]
+decimal_point_price = [1, 2, 2, 4, 4, 5, 2, 2, 3, 3, 4, 3, 3, 4, 4, 4, 6, 6, 4, 4, 3, 5, 3, 3, 3, 3, 2, 4,
+                       3, 3, 6, 6, 3, 3]
+
 
 class Symbols:
 
@@ -19,9 +29,13 @@ class Symbols:
                                   1, 0, 0, 1, 1]
         self.decimal_point_price = [1, 2, 2, 4, 4, 5, 2, 2, 3, 3, 4, 3, 3, 4, 4, 4, 6, 6, 4, 4, 3, 5, 3, 3, 3, 3, 2, 4,
                                     3, 3, 6, 6, 3, 3]
-        self.upper_sharpness = [1.001, 1.0015, 1.002, 1.0025, 1.003, 1.004, 1.005]
-        self.lower_sharpness = [0.999, 0.9985, 0.998, 0.9975, 0.997, 0.996, 0.995]
-        self.timeframe = ["3m", "5m", "15m", "30m", "1h", "2h", "4h"]
+        self.upper_sharpness = [1.002, 1.0025, 1.003, 1.004, 1.005]
+        self.lower_sharpness = [0.998, 0.9975, 0.997, 0.996, 0.995]
+        self.timeframe = ["15m", "30m", "1h", "2h", "4h"]
+        self.moved_symbols_list = []
+        # self.upper_sharpness = [1.001, 1.0015, 1.002, 1.0025, 1.003, 1.004, 1.005]
+        # self.lower_sharpness = [0.999, 0.9985, 0.998, 0.9975, 0.997, 0.996, 0.995]
+        # self.timeframe = ["3m", "5m", "15m", "30m", "1h", "2h", "4h"]
         self.current_index = current_index_symbol
         self.current_symbol = self.symbols[self.current_index]
         self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
@@ -52,6 +66,24 @@ class Symbols:
         self.current_decimal_point_price = self.decimal_point_price[self.current_index]
         self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
 
+    def move_symbols(self):
+        pop_symbol = self.symbols.pop(self.current_index)
+        pop_point_qty = self.decimal_point_qty.pop(self.current_index)
+        pop_point_price = self.decimal_point_price.pop(self.current_index)
+        self.moved_symbols_list.append((pop_symbol, pop_point_price, pop_point_qty))
+
+    def reset_symbol(self):
+        self.symbols = symbols
+        self.decimal_point_price = decimal_point_price
+        self.decimal_point_qty = decimal_point_qty
+
+    def increment_to_specific_symbol(self, symbol: str):
+        self.current_index = self.symbols.index(symbol)
+        self.current_symbol = self.symbols[self.current_index]
+        self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
+        self.current_decimal_point_price = self.decimal_point_price[self.current_index]
+        self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
+
     def increment_harmonics(self):
         if self.current_index == len(self.symbols) - 1:
             self.current_index = 0
@@ -68,7 +100,6 @@ class Symbols:
         self.current_timeframe = self.timeframe[self.current_index_timeframe]
         self.current_upper_sharpness = self.upper_sharpness[self.current_index_timeframe]
         self.current_lower_sharpness = self.lower_sharpness[self.current_index_timeframe]
-
 
     def client(self):
         client = Client(api_key=self.api_key, sec_key=self.secret_key, testnet=False, symbol=self.current_symbol,
@@ -124,4 +155,5 @@ class Symbols:
         print(self.current_index, ".", self.current_symbol, " : ", self.current_symbol_price)
 
     def print_current_status(self):
-        print("********************* Finding Harmonics For "+self.current_symbol+" at TimeFrame = "+ self.current_timeframe+ " ******************************")
+        print(
+            "********************* Finding Harmonics For " + self.current_symbol + " at TimeFrame = " + self.current_timeframe + " ******************************")

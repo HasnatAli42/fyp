@@ -354,7 +354,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
         open_price, high, low, close = symb_obj.get_data(timeframe=symb_obj.current_timeframe)
         indicator_obj.analyze_trend(close=close)
         indicator_obj.find_x_a_b_c_d(open_price=open_price, high=high, low=low, close=close, find_range=15)
-        indicator_obj.calculate_range(provided_array_higher=high, provided_array_lower=low, check_nearest=5)
+        indicator_obj.calculate_range(provided_array_higher=open_price, provided_array_lower=close, check_nearest=1)
         symb_obj.print_current_status()
 
         if indicator_obj.isBullishTrend and indicator_obj.isDinRange:
@@ -542,7 +542,7 @@ if __name__ == "__main__":
     counters_obj = Counters()
     indicators_obj = Indicator()
     trading_bot_obj = TradingBot()
-    symbol_obj = Symbols(0)
+    symbol_obj = Symbols(current_index_symbol=0, current_index_time_frame=0)
     db = DB()
     while True:
         try:
