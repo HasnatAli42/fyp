@@ -64,7 +64,7 @@ def long_order_placed(
         current_index,
         client: Client
 ):
-    global isThisExecutedThread, isThreadClosed
+    # global isThisExecutedThread, isThreadClosed
     isThisExecutedThread = False
     isThreadClosed = False
     thread_trade_obj = TradingBot()
@@ -157,7 +157,7 @@ def short_order_placed(
         current_index,
         client: Client
 ):
-    global isThisExecutedThread, isThreadClosed
+    # global isThisExecutedThread, isThreadClosed
     isThisExecutedThread = False
     isThreadClosed = False
     thread_trade_obj = TradingBot()

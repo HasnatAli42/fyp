@@ -6,7 +6,7 @@ import requests
 import numpy as np
 import pandas as pd
 import time
-
+from BinanceFuturesPy.futurespy import Client
 
 class TradingBot:
 
@@ -53,7 +53,7 @@ class TradingBot:
         self.thread_new_place_order_price = 0
         self.thread_place_order_price = 0
 
-    def update_data_set(self, side, SYMBOL, client, QNTY):
+    def update_data_set(self, side, SYMBOL, client: Client, QNTY):
         global total_wallet_balance, available_balance
         con = sl.connect('orders-executed.db')
         account_details = client.account_info()
@@ -121,7 +121,7 @@ class TradingBot:
         file.write("\n" + str(currentIndex))
         file.close()
 
-    def trailing_stop_loss_order(self, stop_loss_price, SYMBOL, client, Decimal_point_price, QNTY):
+    def trailing_stop_loss_order(self, stop_loss_price, SYMBOL, client: Client, Decimal_point_price, QNTY):
         if self.position_quantity_any_direction(SYMBOL, client) > 0:
             self.order2 = client.new_order(symbol=SYMBOL, orderType="STOP_MARKET", quantity=QNTY, side="SELL",
                                            stopPrice=round(stop_loss_price, Decimal_point_price),
@@ -145,7 +145,7 @@ class TradingBot:
                     self.update_trailing_order(SYMBOL=SYMBOL, order=self.order2)
 
 
-    def place_long_order(self, long, SYMBOL, client, Decimal_point_price, QNTY):
+    def place_long_order(self, long, SYMBOL, client: Client, Decimal_point_price, QNTY):
         client.cancel_all_open_orders(SYMBOL)
         self.order1 = client.new_order(symbol=SYMBOL, orderType="STOP", quantity=QNTY, side="BUY",
                                        price=round((long + ((long * above_or_below_wick) / 100)), Decimal_point_price),
@@ -156,7 +156,7 @@ class TradingBot:
         self.isShortOrderPlaced = False
         return self.order1
 
-    def cancel_executed_orders(self, SYMBOL, client, QNTY):
+    def cancel_executed_orders(self, SYMBOL, client: Client, QNTY):
         client.cancel_all_open_orders(SYMBOL)
         self.remaining_quantity = self.position_quantity_any_direction(SYMBOL, client)
         if self.remaining_quantity > 0:
@@ -164,7 +164,7 @@ class TradingBot:
         elif self.remaining_quantity < 0:
             self.order1 = client.new_order(symbol=SYMBOL, orderType="MARKET", quantity=QNTY, side="BUY")
 
-    def place_short_order(self, short, SYMBOL, client, Decimal_point_price, QNTY):
+    def place_short_order(self, short, SYMBOL, client: Client, Decimal_point_price, QNTY):
         client.cancel_all_open_orders(SYMBOL)
         self.order1 = client.new_order(symbol=SYMBOL, orderType="STOP", quantity=QNTY, side="SELL",
                                        price=round((short - ((short * above_or_below_wick) / 100)),
@@ -176,7 +176,7 @@ class TradingBot:
         self.isShortOrderPlaced = True
         return self.order1
 
-    def place_in_progress_order_limits(self,  SYMBOL, client, Decimal_point_price, QNTY):
+    def place_in_progress_order_limits(self,  SYMBOL, client: Client, Decimal_point_price, QNTY):
         if self.position_quantity_any_direction(SYMBOL, client) > 0:
             self.order1 = client.new_order(symbol=SYMBOL, orderType="LIMIT", quantity=QNTY, side="SELL",
                                            price=round((
@@ -211,7 +211,7 @@ class TradingBot:
                     self.order2 = client.new_order(symbol=SYMBOL, orderType="MARKET", quantity=QNTY, side="BUY")
                     self.ShortHit = "ShortHit2021"
 
-    def place_trailing_stop_loss(self,  SYMBOL, client, Decimal_point_price, QNTY):
+    def place_trailing_stop_loss(self,  SYMBOL, client: Client, Decimal_point_price, QNTY):
         if self.position_quantity_any_direction(SYMBOL, client) > 0:
             if self.currency_price >= (self.trailing_order_price + (self.trailing_order_price *(trailing_order_check/100))):
                 self.trailing_order_price = (self.trailing_order_price + (self.trailing_order_price * (trailing_order_increase/100)))
@@ -310,21 +310,21 @@ class TradingBot:
         time.sleep(candle_time_seconds - time_for_next_candle + 2)
         print("Time dot Sleep End", datetime.now())
 
-    def position_quantity_any_direction(self, SYMBOL, client):
+    def position_quantity_any_direction(self, SYMBOL, client: Client):
         posInfo = client.position_info()
         for counter in posInfo:
             if counter["symbol"] == SYMBOL:
                 quantity = float(counter["positionAmt"])
                 return quantity
 
-    def position_quantity(self, SYMBOL, client):
+    def position_quantity(self, SYMBOL, client: Client):
         posInfo = client.position_info()
         for counter in posInfo:
             if counter["symbol"] == SYMBOL:
                 quantity = abs(float(counter["positionAmt"]))
                 return quantity
 
-    def position_info(self, SYMBOL, client):
+    def position_info(self, SYMBOL, client: Client):
         posInfo = client.position_info()
 
         for counter in posInfo:
@@ -332,7 +332,7 @@ class TradingBot:
                 print(counter)
                 return counter
 
-    def executed_order_on_wick_check(self,  SYMBOL, client ,QNTY):
+    def executed_order_on_wick_check(self,  SYMBOL, client: Client ,QNTY):
         self.time_dot_round(TIME_PERIOD=TIME_PERIOD)
         time.sleep(TIME_SLEEP)
         start_price, high, low, close = self.get_data(SYMBOL)
