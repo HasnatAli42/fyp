@@ -34,10 +34,6 @@ def assign_trade_bot_close_thread(to_be_assigned: TradingBot, assigned_from: Tra
 
 
 def assign_trade_bot_main_open(to_be_assigned: TradingBot):
-    print("currency_price=",to_be_assigned.currency_price, "=", to_be_assigned.thread_currency_price)
-    print("take_profit=",to_be_assigned.take_profit, "=", to_be_assigned.thread_high_price)
-    print("take_profit=",to_be_assigned.take_profit, "=", to_be_assigned.thread_take_profit)
-    print("stop_loss=",to_be_assigned.stop_loss, "=", to_be_assigned.thread_stop_loss)
     to_be_assigned.currency_price = to_be_assigned.thread_currency_price
     to_be_assigned.high_price = to_be_assigned.thread_high_price
     to_be_assigned.take_profit = to_be_assigned.thread_take_profit
@@ -120,8 +116,6 @@ def long_order_placed(
                                                             Decimal_point_price=current_decimal_point_price,
                                                             QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
-            executed_order_on_wick_check = threading.Thread(name="executed_order_on_wick_check", target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
-            executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadLong = True
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
@@ -202,8 +196,6 @@ def short_order_placed(
                                                             Decimal_point_price=current_decimal_point_price,
                                                             QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
-            executed_order_on_wick_check = threading.Thread(name="executed_order_on_wick_check", target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
-            executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadShort = True
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
@@ -237,18 +229,17 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
         print("Symbols List Length         = ", len(symb_obj.symbols))
 
         if not trade_bot_obj.isThreadAllowed:
-            print("Program Spotted Here")
             assign_trade_bot_main_open(to_be_assigned=trade_bot_obj)
             symb_obj.cancel_all_orders()
             symb_obj.reset_increment_to_specific_symbol(symbol=trade_bot_obj.order_executed_for_symbol)
+            executed_order_on_wick_check = threading.Thread(name="executed_order_on_wick_check", target=trade_bot_obj.executed_order_on_wick_check, args=(symb_obj.current_symbol, symb_obj.client(), symb_obj.current_QNTY))
+            executed_order_on_wick_check.start()
             allow_thread(t_obj=trade_bot_obj)
             if trade_bot_obj.wasThreadLong:
-                print("Program Spotted Here Long")
                 trade_bot_obj.wasThreadLong = False
                 trade_bot_obj.isOrderInProgress = True
                 trade_bot_obj.isLongOrderInProgress = True
             elif trade_bot_obj.wasThreadShort:
-                print("Program Spotted Here Short")
                 trade_bot_obj.wasThreadShort = False
                 trade_bot_obj.isOrderInProgress = True
                 trade_bot_obj.isShortOrderInProgress = True
