@@ -34,6 +34,10 @@ def assign_trade_bot_close_thread(to_be_assigned: TradingBot, assigned_from: Tra
 
 
 def assign_trade_bot_main_open(to_be_assigned: TradingBot):
+    print("currency_price=",to_be_assigned.currency_price, "=", to_be_assigned.thread_currency_price)
+    print("take_profit=",to_be_assigned.take_profit, "=", to_be_assigned.thread_high_price)
+    print("take_profit=",to_be_assigned.take_profit, "=", to_be_assigned.thread_take_profit)
+    print("stop_loss=",to_be_assigned.stop_loss, "=", to_be_assigned.thread_stop_loss)
     to_be_assigned.currency_price = to_be_assigned.thread_currency_price
     to_be_assigned.high_price = to_be_assigned.thread_high_price
     to_be_assigned.take_profit = to_be_assigned.thread_take_profit
@@ -50,7 +54,8 @@ def assign_indicate_obj(to_be_assigned_ind_obj: Indicator, assigned_from_ind_obj
 
 
 def allow_thread(t_obj: TradingBot):
-    time.sleep(TIME_SLEEP*6)
+    print("Allow Threads Called")
+    time.sleep(TIME_SLEEP*5)
     t_obj.isThreadAllowed = True
 
 
@@ -62,18 +67,16 @@ def long_order_placed(
         current_decimal_point_price,
         current_QNTY,
         current_index,
-        client: Client
+        client: Client,
+        is_this_thread_executed,
 ):
-    # global isThisExecutedThread, isThreadClosed
-    isThisExecutedThread = False
-    isThreadClosed = False
+    print("Thread ",threading.current_thread(),"started with symbol = ",current_symbol)
     thread_trade_obj = TradingBot()
     assign_trade_bot_initialize_thread(to_be_assigned=thread_trade_obj, assigned_from=t_obj)
     thread_indicate_obj = Indicator()
     assign_indicate_obj(to_be_assigned_ind_obj=thread_indicate_obj, assigned_from_ind_obj=i_obj)
 
     while t_obj.isThreadAllowed:
-
         open_price, high, low, close = thread_trade_obj.get_data(SYMBOL=current_symbol)
         thread_indicate_obj.calculate(open_price=open_price, high=high, low=low, close=close)
         thread_trade_obj.currency_price = thread_trade_obj.get_price(SYMBOL=current_symbol)
@@ -108,7 +111,8 @@ def long_order_placed(
                 thread_trade_obj.write_to_file(currentIndex=current_index)
 
         if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
-            # print("Order Executed Successfully for", current_symbol)
+            print("Order Executed Successfully for", current_symbol)
+            s_obj.moved_symbols_list.remove(current_symbol)
             thread_trade_obj.update_data_set(side="LongExecuted", SYMBOL=current_symbol,
                                              client=client,
                                              QNTY=current_QNTY)
@@ -116,17 +120,15 @@ def long_order_placed(
                                                             Decimal_point_price=current_decimal_point_price,
                                                             QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
-            executed_order_on_wick_check = threading.Thread(target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
+            executed_order_on_wick_check = threading.Thread(name="executed_order_on_wick_check", target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
             executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadLong = True
-            isThisExecutedThread = True
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
             t_obj.order_executed_for_symbol = current_symbol
-            isThreadClosed = True
             break
         if thread_indicate_obj.slow_speed_line < thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
-            # print("Order Cancelled Successfully for", current_symbol)
+            print("Order Cancelled Successfully for", current_symbol)
             client.cancel_all_open_orders(current_symbol)
             thread_trade_obj.newHoffmanSignalCheck = False
             if thread_trade_obj.take_profit > max_take_profit_limit:
@@ -137,14 +139,11 @@ def long_order_placed(
                                                  client=client, QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
             thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
-            isThreadClosed = True
             break
-        if not isThreadClosed:
-            time.sleep(TIME_SLEEP * 5)
+        if t_obj.isThreadAllowed:
+            time.sleep(TIME_SLEEP * 4)
     t_obj.threadCounter += -1
-    s_obj.moved_symbols_list.remove(current_symbol)
-    if not isThisExecutedThread:
-        client.cancel_all_open_orders(current_symbol)
+
 
 
 def short_order_placed(
@@ -155,11 +154,10 @@ def short_order_placed(
         current_decimal_point_price,
         current_QNTY,
         current_index,
-        client: Client
+        client: Client,
+        is_this_thread_executed,
 ):
-    # global isThisExecutedThread, isThreadClosed
-    isThisExecutedThread = False
-    isThreadClosed = False
+    print("Thread ", threading.current_thread(), "started with symbol = ", current_symbol)
     thread_trade_obj = TradingBot()
     assign_trade_bot_initialize_thread(to_be_assigned=thread_trade_obj, assigned_from=t_obj)
     thread_indicate_obj = Indicator()
@@ -195,7 +193,8 @@ def short_order_placed(
                                                  client=client, QNTY=current_QNTY)
                 thread_trade_obj.write_to_file(currentIndex=current_index)
         if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
-            # print("Order Executed Successfully for",current_symbol)
+            print("Order Executed Successfully for",current_symbol)
+            s_obj.moved_symbols_list.remove(current_symbol)
             thread_trade_obj.update_data_set(side="ShortExecuted", SYMBOL=current_symbol,
                                              client=client, QNTY=current_QNTY)
             thread_trade_obj.place_in_progress_order_limits(SYMBOL=current_symbol,
@@ -203,17 +202,15 @@ def short_order_placed(
                                                             Decimal_point_price=current_decimal_point_price,
                                                             QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
-            executed_order_on_wick_check = threading.Thread(target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
+            executed_order_on_wick_check = threading.Thread(name="executed_order_on_wick_check", target=thread_trade_obj.executed_order_on_wick_check, args=(current_symbol, client, current_QNTY))
             executed_order_on_wick_check.start()
             t_obj.isThreadAllowed = False
             t_obj.wasThreadShort = True
-            isThisExecutedThread = True
             assign_trade_bot_close_thread(to_be_assigned=t_obj, assigned_from=thread_trade_obj)
             t_obj.order_executed_for_symbol = current_symbol
-            isThreadClosed = True
             break
         if thread_indicate_obj.slow_speed_line > thread_indicate_obj.fast_primary_trend_line or thread_trade_obj.take_profit > max_take_profit_limit:
-            # print("Order Cancelled Successfully for", current_symbol)
+            print("Order Cancelled Successfully for", current_symbol)
             client.cancel_all_open_orders(current_symbol)
             thread_trade_obj.newHoffmanSignalCheck = False
             if thread_trade_obj.take_profit > max_take_profit_limit:
@@ -224,36 +221,34 @@ def short_order_placed(
                                                  client=client, QNTY=current_QNTY)
             thread_trade_obj.write_to_file(currentIndex=current_index)
             thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
-            isThreadClosed = True
             break
-        if not isThreadClosed:
-            time.sleep(TIME_SLEEP * 5)
+        if t_obj.isThreadAllowed:
+            time.sleep(TIME_SLEEP * 4)
     t_obj.threadCounter += -1
-    s_obj.moved_symbols_list.remove(current_symbol)
-    if not isThisExecutedThread:
-        client.cancel_all_open_orders(current_symbol)
 
 
 def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indicator, symb_obj: Symbols, db_obj: DB):
     while True:
         print("")
-        print("")
-        print("")
+        print("Current Open Threads By Threads         = ", threading.active_count())
+        print("Current Open Thread Details By Threads  =", threading.enumerate())
         print("Current Open Threads        = ", trade_bot_obj.threadCounter)
         print("Current Open Thread Details =", symb_obj.moved_symbols_list)
         print("Symbols List Length         = ", len(symb_obj.symbols))
 
         if not trade_bot_obj.isThreadAllowed:
-            allow_threads_after_sometime = threading.Thread(target=allow_thread, args=(trade_bot_obj,))
-            allow_threads_after_sometime.start()
+            print("Program Spotted Here")
             assign_trade_bot_main_open(to_be_assigned=trade_bot_obj)
-            symb_obj.reset_symbol()
-            symb_obj.increment_to_specific_symbol(symbol=trade_bot_obj.order_executed_for_symbol)
+            symb_obj.cancel_all_orders()
+            symb_obj.reset_increment_to_specific_symbol(symbol=trade_bot_obj.order_executed_for_symbol)
+            allow_thread(t_obj=trade_bot_obj)
             if trade_bot_obj.wasThreadLong:
+                print("Program Spotted Here Long")
                 trade_bot_obj.wasThreadLong = False
                 trade_bot_obj.isOrderInProgress = True
                 trade_bot_obj.isLongOrderInProgress = True
             elif trade_bot_obj.wasThreadShort:
+                print("Program Spotted Here Short")
                 trade_bot_obj.wasThreadShort = False
                 trade_bot_obj.isOrderInProgress = True
                 trade_bot_obj.isShortOrderInProgress = True
@@ -275,10 +270,9 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
         else:
             if trade_bot_obj.isOrderPlaced and trade_bot_obj.isLongOrderPlaced:
 
-                placed_order_execution_check = threading.Thread(
-                    target=long_order_placed, args=(
+                placed_order_execution_check = threading.Thread(name=symb_obj.current_symbol, target=long_order_placed, args=(
                         trade_bot_obj, indicator_obj, symb_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
-                        symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client()))
+                        symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client(), False))
                 placed_order_execution_check.start()
                 trade_bot_obj.threadCounter += 1
                 time.sleep(TIME_SLEEP)
@@ -286,12 +280,10 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                 trade_bot_obj.isLongOrderPlaced = False
                 symb_obj.move_symbols()
 
-            elif trade_bot_obj.isOrderPlaced and trade_bot_obj.isShortOrderPlaced:\
-
-                placed_order_execution_check = threading.Thread(
-                    target=short_order_placed, args=(
+            elif trade_bot_obj.isOrderPlaced and trade_bot_obj.isShortOrderPlaced:
+                placed_order_execution_check = threading.Thread(name=symb_obj.current_symbol, target=short_order_placed, args=(
                         trade_bot_obj, indicator_obj, symb_obj, symb_obj.current_symbol, symb_obj.current_decimal_point_price,
-                        symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client()))
+                        symb_obj.current_QNTY, symb_obj.current_index, symb_obj.client(), False))
                 placed_order_execution_check.start()
                 trade_bot_obj.threadCounter += 1
                 time.sleep(TIME_SLEEP)
@@ -509,7 +501,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.time_dot_round(TIME_PERIOD)
                     trade_bot_obj.update_data_set(side="sleep ended", SYMBOL=symb_obj.current_symbol,
                                                   client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
-            elif not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isOrderPlaced:
+            elif not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isOrderPlaced and len(symb_obj.symbols) > 0:
                 print("\n--------- Currency ---------")
                 print(symb_obj.current_symbol, ":", trade_bot_obj.currency_price)
                 print("----------------------------")

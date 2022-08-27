@@ -332,7 +332,7 @@ class TradingBot:
                 print(counter)
                 return counter
 
-    def executed_order_on_wick_check(self,  SYMBOL, client: Client ,QNTY):
+    def executed_order_on_wick_check(self,  SYMBOL, client: Client, QNTY):
         self.time_dot_round(TIME_PERIOD=TIME_PERIOD)
         time.sleep(TIME_SLEEP)
         start_price, high, low, close = self.get_data(SYMBOL)

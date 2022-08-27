@@ -66,24 +66,33 @@ class Symbols:
         pop_point_qty = self.decimal_point_qty.pop(self.current_index)
         pop_point_price = self.decimal_point_price.pop(self.current_index)
         self.moved_symbols_list.append(pop_symbol)
+        if self.current_index == len(self.symbols):
+            self.current_index = 0
         self.current_symbol = self.symbols[self.current_index]
         self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
         self.current_decimal_point_price = self.decimal_point_price[self.current_index]
         self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
-        if self.current_index == len(self.symbols):
-            self.current_index = 0
 
-    def reset_symbol(self):
-        self.symbols = symbols
-        self.decimal_point_price = decimal_point_price
-        self.decimal_point_qty = decimal_point_qty
-
-    def increment_to_specific_symbol(self, symbol):
+    def reset_increment_to_specific_symbol(self, symbol):
+        print("reset_increment_to_specific_symbol Here")
+        print("Complete Symbols Before reset", symbols)
+        print("Symbols Before reset", self.symbols)
+        self.symbols = ["BTCBUSD", "ETHBUSD", "BNBBUSD", "ADABUSD", "XRPBUSD", "DOGEBUSD", "SOLBUSD", "FTTBUSD",
+           "AVAXBUSD", "NEARBUSD", "GMTBUSD", "APEBUSD", "GALBUSD", "FTMBUSD", "DODOBUSD", "ANCBUSD",
+           "GALABUSD", "TRXBUSD", "1000LUNCBUSD", "LUNA2BUSD", "DOTBUSD", "TLMBUSD", "ICPBUSD",
+           "WAVESBUSD", "LINKBUSD", "SANDBUSD", "LTCBUSD", "MATICBUSD", "CVXBUSD", "FILBUSD",
+           "1000SHIBBUSD", "LEVERBUSD", "ETCBUSD", "LDOBUSD"]
+        print("Symbols After reset", self.symbols)
+        self.decimal_point_price = [1, 2, 2, 4, 4, 5, 2, 2, 3, 3, 4, 3, 3, 4, 4, 4, 6, 6, 4, 4, 3, 5, 3, 3, 3, 3, 2, 4,
+                       3, 3, 6, 6, 3, 3]
+        self.decimal_point_qty = [3, 3, 2, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 1,
+                     1, 0, 0, 1, 1]
         self.current_index = self.symbols.index(symbol)
         self.current_symbol = self.symbols[self.current_index]
         self.current_decimal_point_qty = self.decimal_point_qty[self.current_index]
         self.current_decimal_point_price = self.decimal_point_price[self.current_index]
         self.current_QNTY = self.dollars_to_cryto_quantiy(Dollars)
+        print("reset_increment_to_specific_symbol Here Till End")
 
     def increment_harmonics(self):
         if self.current_index == len(self.symbols) - 1:
@@ -107,6 +116,16 @@ class Symbols:
                         recv_window=30000)
         client.change_leverage(Leverage)
         return client
+
+    def cancel_all_orders(self):
+        print("cancel All Orders Called")
+        while self.moved_symbols_list:
+            print("Cancel  All Orders for", self.moved_symbols_list)
+            client = Client(api_key=self.api_key, sec_key=self.secret_key, testnet=False, symbol=self.moved_symbols_list[0],
+                            recv_window=30000)
+            order = client.cancel_all_open_orders(self.moved_symbols_list[0])
+            if order["code"] == 200:
+                self.moved_symbols_list.remove(self.moved_symbols_list[0])
 
     def get_price(self):
         try:
