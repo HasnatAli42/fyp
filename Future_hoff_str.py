@@ -41,6 +41,7 @@ def assign_trade_bot_main_open(to_be_assigned: TradingBot):
     to_be_assigned.newHoffmanSignalCheck = to_be_assigned.thread_newHoffmanSignalCheck
     to_be_assigned.new_place_order_price = to_be_assigned.thread_new_place_order_price
     to_be_assigned.place_order_price = to_be_assigned.thread_place_order_price
+    to_be_assigned.trailing_order_price = to_be_assigned.thread_place_order_price
 
 
 def assign_indicate_obj(to_be_assigned_ind_obj: Indicator, assigned_from_ind_obj: Indicator):
