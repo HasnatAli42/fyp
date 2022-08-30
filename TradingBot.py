@@ -300,15 +300,20 @@ class TradingBot:
         return data["open"], data["high"], data["low"], data["close"]
 
     def time_dot_round(self, TIME_PERIOD):
-        print("Time dot Sleep Started", datetime.now())
         candle_time = int(TIME_PERIOD.replace("m", ""))
         candle_time_seconds = candle_time * 60
+        recent_check = candle_time_seconds * 0.04
         minute = datetime.now().minute
         second = datetime.now().second
         micro = datetime.now().microsecond
         time_for_next_candle = ((minute % candle_time) * 60) + second + (micro / 1000000)
-        time.sleep(candle_time_seconds - time_for_next_candle + 2)
-        print("Time dot Sleep End", datetime.now())
+        if recent_check > time_for_next_candle:
+            print("Time dot Sleep is not Required")
+        else:
+            print("Time dot Sleep Started", datetime.now())
+            time.sleep(candle_time_seconds - time_for_next_candle + 2)
+            print("Time dot Sleep End", datetime.now())
+
 
     def position_quantity_any_direction(self, SYMBOL, client: Client):
         posInfo = client.position_info()

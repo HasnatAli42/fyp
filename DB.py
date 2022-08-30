@@ -69,6 +69,18 @@ class DB:
         con = sl.connect('orders-executed.db')
         with con:
             con.execute(f"""
+                                CREATE TABLE IF NOT EXISTS FUTURES_HOFFMAN_THREADS_EXCEPTION (
+                                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    Symbol TEXT,
+                                    Exception TEXT,
+                                    CancelOrder TEXT,
+                                    Time TEXT
+                                );
+                            """)
+
+        con = sl.connect('orders-executed.db')
+        with con:
+            con.execute(f"""
                                 CREATE TABLE IF NOT EXISTS HARMONIC_PARTIAL_PATTERNS (
                                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                                     Harmonic TEXT,
@@ -86,22 +98,33 @@ class DB:
                                 );
                             """)
 
-    def insert_harmonic_partial_pattern(self,String):
+    def insert_harmonic_partial_pattern(self, String):
         con = sl.connect('orders-executed.db')
         sql = f'INSERT INTO HARMONIC_PARTIAL_PATTERNS (Harmonic, Time) values(?,?) '
         data = [
-            (str(String)),(str(datetime.now())),
+            (str(String)), (str(datetime.now())),
         ]
         with con:
             con.execute(sql, data)
             con.commit()
 
-    def insert_harmonic_complete_pattern(self,String):
+    def insert_harmonic_complete_pattern(self, String):
         con = sl.connect('orders-executed.db')
         sql = f'INSERT INTO HARMONIC_COMPLETE_PATTERNS (Harmonic, Time) values(?,?) '
         data = [
-            (str(String)),(str(datetime.now())),
+            (str(String)), (str(datetime.now())),
         ]
         with con:
             con.execute(sql, data)
             con.commit()
+
+
+def threads_exception_data(symbol, exception, order):
+    con = sl.connect('orders-executed.db')
+    sql = f'INSERT INTO FUTURES_HOFFMAN_THREADS_EXCEPTION (Symbol, Exception, CancelOrder, Time) values(?,?,?,?) '
+    data = [
+        (str(symbol)), (str(exception)), (str(order)), (str(datetime.now()))
+    ]
+    with con:
+        con.execute(sql, data)
+        con.commit()
