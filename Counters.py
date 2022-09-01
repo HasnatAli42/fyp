@@ -121,10 +121,10 @@ class Counters:
 
     def is_order_in_profit_again(self, side):
         if side == "buy":
-            if len(self.long_profit_counter_list) >= 1 and len(self.long_loss_counter_list) >= 2 and self.long_current_in_profit_counter > 3:
+            if len(self.long_profit_counter_list) >= 2 and len(self.long_loss_counter_list) >= 2 and self.long_current_in_profit_counter > 3:
                 return True
         elif side == "sell":
-            if len(self.short_profit_counter_list) >= 1 and len(self.short_loss_counter_list) >= 2 and self.short_current_in_profit_counter > 3:
+            if len(self.short_profit_counter_list) >= 2 and len(self.short_loss_counter_list) >= 2 and self.short_current_in_profit_counter > 3:
                 return True
         return False
 

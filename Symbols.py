@@ -111,7 +111,7 @@ class Symbols:
         client.change_leverage(Leverage)
         return client
 
-    def cancel_all_orders(self):
+    def cancel_all_orders(self, fake_argument1, fake_argument2, fake_argument3):
         while self.moved_symbols_list:
             client = Client(api_key=self.api_key, sec_key=self.secret_key, testnet=False,
                             symbol=self.moved_symbols_list[0],
@@ -120,6 +120,8 @@ class Symbols:
                 order = client.cancel_all_open_orders(self.moved_symbols_list[0])
                 if order["code"] == 200:
                     self.moved_symbols_list.remove(self.moved_symbols_list[0])
+            else:
+                self.moved_symbols_list.remove(self.moved_symbols_list[0])
 
     def position_quantity_any_direction(self, SYMBOL, client: Client):
         posInfo = client.position_info()

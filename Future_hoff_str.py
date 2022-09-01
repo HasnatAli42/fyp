@@ -51,8 +51,7 @@ def assign_indicate_obj(to_be_assigned_ind_obj: Indicator, assigned_from_ind_obj
 
 
 def allow_thread(t_obj: TradingBot):
-    print("Allow Threads Called")
-    time.sleep(TIME_SLEEP*5)
+    time.sleep(TIME_SLEEP*4)
     t_obj.isThreadAllowed = True
 
 
@@ -110,7 +109,6 @@ def long_order_placed(
 
             if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
                 print("Order Executed Successfully for", current_symbol)
-                s_obj.moved_symbols_list.remove(current_symbol)
                 thread_trade_obj.update_data_set(side="LongExecuted", SYMBOL=current_symbol,
                                                  client=client,
                                                  QNTY=current_QNTY)
@@ -137,7 +135,7 @@ def long_order_placed(
                 thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
                 break
             if t_obj.isThreadAllowed:
-                time.sleep(TIME_SLEEP * 4)
+                time.sleep(TIME_SLEEP * 3)
         t_obj.threadCounter += -1
     except Exception as long_thread_exception:
         cancel_order = client.cancel_all_open_orders(current_symbol)
@@ -194,7 +192,6 @@ def short_order_placed(
                     thread_trade_obj.write_to_file(currentIndex=current_index)
             if thread_trade_obj.position_quantity(SYMBOL=current_symbol, client=client) > 0:
                 print("Order Executed Successfully for",current_symbol)
-                s_obj.moved_symbols_list.remove(current_symbol)
                 thread_trade_obj.update_data_set(side="ShortExecuted", SYMBOL=current_symbol,
                                                  client=client, QNTY=current_QNTY)
                 thread_trade_obj.place_in_progress_order_limits(SYMBOL=current_symbol,
@@ -221,7 +218,7 @@ def short_order_placed(
                 thread_trade_obj.time_dot_round(TIME_PERIOD=TIME_PERIOD)
                 break
             if t_obj.isThreadAllowed:
-                time.sleep(TIME_SLEEP * 4)
+                time.sleep(TIME_SLEEP * 3)
         t_obj.threadCounter += -1
     except Exception as short_thread_exception:
         cancel_order = client.cancel_all_open_orders(current_symbol)
@@ -240,7 +237,8 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
 
         if not trade_bot_obj.isThreadAllowed:
             assign_trade_bot_main_open(to_be_assigned=trade_bot_obj)
-            symb_obj.cancel_all_orders()
+            cancel_all_orders = threading.Thread(name="cancel_all_orders", target=symb_obj.cancel_all_orders, args=("fake_argument1", "fake_argument1", "fake_argument1"))
+            cancel_all_orders.start()
             symb_obj.reset_increment_to_specific_symbol(symbol=trade_bot_obj.order_executed_for_symbol)
             executed_order_on_wick_check = threading.Thread(name="executed_order_on_wick_check", target=trade_bot_obj.executed_order_on_wick_check, args=(symb_obj.current_symbol, symb_obj.client(), symb_obj.current_QNTY))
             executed_order_on_wick_check.start()
@@ -504,7 +502,7 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
                     trade_bot_obj.update_data_set(side="sleep ended", SYMBOL=symb_obj.current_symbol,
                                                   client=symb_obj.client(), QNTY=symb_obj.current_QNTY)
                     symb_obj.increment()
-            elif not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isOrderPlaced and len(symb_obj.symbols) > 0:
+            elif not trade_bot_obj.isOrderInProgress and not trade_bot_obj.isOrderPlaced and len(symb_obj.symbols) > 17:
                 print("\n--------- Currency ---------")
                 print(symb_obj.current_symbol, ":", trade_bot_obj.currency_price)
                 print("----------------------------")
@@ -626,6 +624,7 @@ if __name__ == "__main__":
             #     main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
         except Exception as e:
             print(e)
+            threads_exception_data(symbol="Main Thread", exception=e, order="null")
             try:
                 time.sleep(20)
             except Exception as e:
