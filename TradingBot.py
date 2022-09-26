@@ -302,7 +302,7 @@ class TradingBot:
     def time_dot_round(self, TIME_PERIOD):
         candle_time = int(TIME_PERIOD.replace("m", ""))
         candle_time_seconds = candle_time * 60
-        recent_check = candle_time_seconds * 0.04
+        recent_check = candle_time_seconds * 0.08
         minute = datetime.now().minute
         second = datetime.now().second
         micro = datetime.now().microsecond

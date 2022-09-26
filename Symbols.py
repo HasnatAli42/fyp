@@ -180,3 +180,27 @@ class Symbols:
     def print_current_status(self):
         print(
             "********************* Finding Harmonics For " + self.current_symbol + " at TimeFrame = " + self.current_timeframe + " ******************************")
+
+    def cancel_all_orders_on_bot_abort(self):
+        symb = ["BTCBUSD", "ETHBUSD", "BNBBUSD", "ADABUSD", "XRPBUSD", "DOGEBUSD", "SOLBUSD", "FTTBUSD",
+           "AVAXBUSD", "NEARBUSD", "GMTBUSD", "APEBUSD", "GALBUSD", "FTMBUSD", "DODOBUSD", "ANCBUSD",
+           "GALABUSD", "TRXBUSD", "1000LUNCBUSD", "LUNA2BUSD", "DOTBUSD", "TLMBUSD", "ICPBUSD",
+           "WAVESBUSD", "LINKBUSD", "SANDBUSD", "LTCBUSD", "MATICBUSD", "CVXBUSD", "FILBUSD",
+           "1000SHIBBUSD", "LEVERBUSD", "ETCBUSD", "LDOBUSD"]
+        while symb:
+            client = Client(api_key=self.api_key, sec_key=self.secret_key, testnet=False,
+                            symbol =symb[0],
+                            recv_window=30000)
+            if self.position_quantity_any_direction(SYMBOL=symb[0], client=client) == 0:
+                order = client.cancel_all_open_orders(symb[0])
+                if order["code"] == 200:
+                    symb.remove(symb[0])
+            else:
+                remaining_quantity = self.position_quantity_any_direction(symb[0], client)
+                if remaining_quantity > 0:
+                    order1 = client.new_order(symbol=symb[0], orderType="MARKET", quantity=abs(remaining_quantity), side="SELL")
+                elif remaining_quantity < 0:
+                    order1 = client.new_order(symbol=symb[0], orderType="MARKET", quantity=abs(remaining_quantity), side="BUY")
+                order = client.cancel_all_open_orders(symb[0])
+                symb.remove(symb[0])
+            print("Stopping in ....", len(symb))

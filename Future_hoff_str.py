@@ -11,6 +11,7 @@ from Symbols import Symbols
 from TradingBot import TradingBot
 from Settings import above_or_below_wick, TIME_PERIOD, TIME_SLEEP, max_take_profit_limit
 from BinanceFuturesPy.futurespy import Client
+from utils import get_bot_status
 
 
 def assign_trade_bot_initialize_thread(to_be_assigned: TradingBot, assigned_from: TradingBot):
@@ -256,6 +257,11 @@ def main(trade_bot_obj: TradingBot, counter_obj: Counters, indicator_obj: Indica
         open_price, high, low, close = symb_obj.get_data(timeframe=TIME_PERIOD)
         indicator_obj.calculate(open_price=open_price, high=high, low=low, close=close)
         trade_bot_obj.currency_price = symb_obj.get_price()
+        if not get_bot_status():
+            print("Bot Stopped Called Successfully")
+            symb_obj.cancel_all_orders_on_bot_abort()
+            print("Bot Stopped Successfully")
+            break
 
         if trade_bot_obj.Highest_Price < trade_bot_obj.currency_price:
             trade_bot_obj.Highest_Price = trade_bot_obj.currency_price
@@ -577,51 +583,11 @@ if __name__ == "__main__":
     db = DB()
     while True:
         try:
-            main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
-            # if os.path.exists(f'is_order_in_progress.txt'):
-            #     file = open(f'is_order_in_progress.txt', 'r')
-            #     x, y, z, xx, yy, zz, xxx, a, b, c, d, e, f, g, h = file.readlines()
-            #     file.close()
-            #     x = strip(x)
-            #     y = strip(y)
-            #     z = strip(z)
-            #     xx = strip(xx)
-            #     yy = strip(yy)
-            #     zz = strip(zz)
-            #     xxx = strip(xxx)
-            #     a = strip(a)
-            #     b = strip(b)
-            #     c = strip(c)
-            #     d = strip(d)
-            #     e = strip(e)
-            #     f = strip(f)
-            #     g = strip(g)
-            #     h = strip(h)
-            #     if x == "True":
-            #         trading_bot_obj.isOrderInProgress = True
-            #     if y == "True":
-            #         trading_bot_obj.isLongOrderInProgress = True
-            #     if z == "True":
-            #         trading_bot_obj.isShortOrderInProgress = True
-            #     if xx == "True":
-            #         trading_bot_obj.isOrderPlaced = True
-            #     if yy == "True":
-            #         trading_bot_obj.isLongOrderPlaced = True
-            #     if zz == "True":
-            #         trading_bot_obj.isShortOrderPlaced = True
-            #     if xxx == "True":
-            #         trading_bot_obj.newHoffmanSignalCheck = True
-            #     trading_bot_obj.order_sequence = int(a)
-            #     trading_bot_obj.high_price = float(b)
-            #     trading_bot_obj.low_price = float(c)
-            #     trading_bot_obj.place_order_price = float(d)
-            #     trading_bot_obj.take_profit = float(e)
-            #     trading_bot_obj.stop_loss = float(f)
-            #     trading_bot_obj.trailing_order_price = float(g)
-            #     symbol_obj.current_index = int(h)
-            #     main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
-            # else:
-            #     main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
+            if get_bot_status():
+                print("Bot Started Successfully")
+                main(trading_bot_obj, counters_obj, indicators_obj, symbol_obj, db)
+            else:
+                print("Bot Status Inactive")
         except Exception as e:
             print(e)
             threads_exception_data(symbol="Main Thread", exception=e, order="null")
